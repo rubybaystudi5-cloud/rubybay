@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>포트폴리오 관리 | 루비베이스튜디오</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nata+Sans:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  /* SUIT — Light(200) / Medium(500) / Bold(700) only */
+  @font-face{
+    font-family:'SUIT';
+    font-weight:200;
+    font-style:normal;
+    font-display:swap;
+    src:url('https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2/fonts/static/woff2/SUIT-ExtraLight.woff2') format('woff2');
+  }
+  @font-face{
+    font-family:'SUIT';
+    font-weight:500;
+    font-style:normal;
+    font-display:swap;
+    src:url('https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2/fonts/static/woff2/SUIT-Medium.woff2') format('woff2');
+  }
+  @font-face{
+    font-family:'SUIT';
+    font-weight:700;
+    font-style:normal;
+    font-display:swap;
+    src:url('https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2/fonts/static/woff2/SUIT-Bold.woff2') format('woff2');
+  }
+
+  :root{
+    --ruby:#b61d22;
+    --ruby-dark:#761316;
+    --ink:#1a1a1a;
+    --gray:#6b6b6b;
+    --line:#e6e2e0;
+    --bg:#fdfcfb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'SUIT', sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    line-height:1.6;
+    font-weight:200;
+    letter-spacing:-0.03em;
+  }
+  a{text-decoration:none;color:inherit;}
+  button{font-family:inherit;}
+  .hidden-input{display:none;}
+
+  /* ---------- Header ---------- */
+  .admin-header{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:24px 6vw;
+    border-bottom:1px solid var(--line);
+    background:#fff;
+  }
+  .admin-header .logo{
+    font-family:'Nata Sans', sans-serif;
+    font-size:20px;font-weight:700;
+  }
+  .admin-header .logo span{color:var(--ruby);}
+  .admin-header .logo small{
+    font-family:'SUIT', sans-serif;
+    font-size:12px;color:var(--gray);
+    letter-spacing:1px;margin-left:10px;
+    border:1px solid var(--line);border-radius:999px;
+    padding:3px 10px;
+  }
+  .view-site{font-size:13px;color:var(--ruby);}
+  .view-site:hover{text-decoration:underline;}
+
+  .admin-main{
+    padding:60px 6vw 160px;
+    max-width:1100px;margin:0 auto;
+  }
+  .admin-section{margin-bottom:110px;}
+  .admin-section h2{
+    font-family:'SUIT', sans-serif;
+    font-size:32px;font-weight:700;margin-bottom:10px;
+  }
+  .hint{font-size:13px;color:var(--gray);margin-bottom:32px;}
+
+  /* ---------- Tool library ---------- */
+  .tool-lib-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:28px;}
+  .tool-lib-item{
+    position:relative;
+    width:56px;height:56px;
+    border:1px solid var(--line);border-radius:8px;
+    overflow:hidden;background:#fff;
+  }
+  .tool-lib-item img{width:100%;height:100%;object-fit:cover;}
+  .tool-lib-item button{
+    position:absolute;top:2px;right:2px;
+    border:none;background:rgba(26,26,26,.6);color:#fff;cursor:pointer;
+    font-size:12px;width:18px;height:18px;border-radius:50%;line-height:1;
+  }
+  .tool-lib-item button:hover{background:var(--ruby);}
+
+  .tool-add-form{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+    border:1px solid var(--line);padding:20px;border-radius:12px;background:#fff;
+  }
+  .primary-btn{
+    background:var(--ruby);color:#fff;border:none;
+    padding:10px 20px;border-radius:8px;font-size:13px;cursor:pointer;
+  }
+  .primary-btn:hover{background:var(--ruby-dark);}
+  .secondary-btn{
+    border:1px solid var(--line);background:none;
+    padding:10px 16px;border-radius:8px;font-size:12px;color:var(--gray);cursor:pointer;
+  }
+  .secondary-btn:hover{border-color:var(--ruby);color:var(--ruby);}
+
+  /* ---------- Project list ---------- */
+  .project-card{
+    border:1px solid var(--line);border-radius:12px;
+    margin-bottom:18px;overflow:hidden;background:#fff;
+  }
+  .project-card-head{
+    display:flex;align-items:center;gap:16px;
+    padding:18px 22px;cursor:pointer;
+  }
+  .ph-thumb{
+    width:64px;height:48px;flex:0 0 auto;
+    border-radius:6px;border:1px solid var(--line);
+    background:#f4efec;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;color:var(--gray);
+  }
+  .ph-thumb img{width:100%;height:100%;object-fit:cover;}
+  .ph-info{flex:1;min-width:0;}
+  .ph-cat{font-size:12px;color:var(--ruby);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+  .ph-title{font-family:'SUIT', sans-serif;font-size:18px;font-weight:700;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .chevron{color:var(--gray);font-size:12px;transition:transform .2s;flex:0 0 auto;}
+  .project-card.open .chevron{transform:rotate(180deg);}
+  .card-delete-btn{
+    flex:0 0 auto;border:1px solid var(--line);background:none;
+    color:var(--gray);font-size:12px;padding:6px 12px;border-radius:999px;cursor:pointer;
+  }
+  .card-delete-btn:hover{border-color:var(--ruby);color:var(--ruby);}
+  .cat-input{max-width:220px;}
+  .project-card-body{display:none;padding:0 22px 32px;border-top:1px solid var(--line);}
+  .project-card.open .project-card-body{display:block;padding-top:28px;}
+
+  .form-grid{display:grid;grid-template-columns:220px 1fr;gap:32px;margin-bottom:32px;}
+  @media(max-width:700px){.form-grid{grid-template-columns:1fr;}}
+
+  .thumb-upload{
+    aspect-ratio:4/3;border:1px dashed var(--line);border-radius:8px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    position:relative;overflow:hidden;background:#f4efec;
+    font-size:12px;color:var(--gray);text-align:center;line-height:1.5;
+  }
+  .thumb-upload img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+
+  .form-row{margin-bottom:22px;}
+  .form-row:last-child{margin-bottom:0;}
+  .form-row label{
+    display:block;font-size:12px;color:var(--gray);
+    letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;
+  }
+  .form-row input[type=text]{
+    width:100%;border:1px solid var(--line);padding:10px 14px;
+    border-radius:8px;font-size:14px;font-family:inherit;color:var(--ink);
+  }
+  .form-row input[type=text]:focus{outline:none;border-color:var(--ruby);}
+
+  .tool-select-grid{display:flex;flex-wrap:wrap;gap:8px;}
+  .tool-select-chip{
+    display:flex;align-items:center;justify-content:center;
+    width:44px;height:44px;padding:0;
+    border:2px solid var(--line);border-radius:8px;
+    cursor:pointer;background:#fff;overflow:hidden;
+  }
+  .tool-select-chip img{width:100%;height:100%;object-fit:cover;}
+  .tool-select-chip.selected{border-color:var(--ruby);}
+  .tool-select-hint{font-size:12px;color:var(--gray);margin-top:10px;}
+  .tool-select-hint.warn{color:var(--ruby);}
+
+  .involve-edit-row{margin-bottom:16px;}
+  .involve-edit-row:last-child{margin-bottom:0;}
+  .involve-edit-row label{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;}
+  .involve-edit-row input[type=range]{width:100%;accent-color:var(--ruby);}
+
+  .gallery-edit-list{display:flex;flex-direction:column;gap:16px;margin-top:6px;}
+  .gallery-edit-item{position:relative;line-height:0;}
+  .gallery-edit-item img{width:100%;border-radius:8px;border:1px solid var(--line);display:block;}
+  .gallery-edit-item button{
+    position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;
+    background:rgba(26,26,26,.6);color:#fff;border:none;cursor:pointer;font-size:15px;
+  }
+  .gallery-edit-item button:hover{background:var(--ruby);}
+  .gallery-edit-add{
+    border:1px dashed var(--line);border-radius:8px;padding:22px;
+    text-align:center;font-size:13px;color:var(--gray);cursor:pointer;
+    background:none;width:100%;
+  }
+  .gallery-edit-add:hover{border-color:var(--ruby);color:var(--ruby);}
+
+  .empty-state{font-size:13px;color:var(--gray);padding:24px 0;}
+</style>
+</head>
+<body>
+
+<header class="admin-header">
+  <div class="logo">Ruby<span>bay</span> studio <small>관리자 페이지</small></div>
+  <a class="view-site" href="work.html">사이트 보기 →</a>
+</header>
+
+<main class="admin-main">
+
+  <section class="admin-section">
+    <h2>도구 라이브러리</h2>
+    <p class="hint">프로젝트에서 선택할 수 있는 작업 툴 아이콘을 정사각형 이미지로 등록하세요. 등록한 아이콘은 모든 프로젝트에서 재사용할 수 있어요.</p>
+
+    <div class="tool-lib-grid" id="toolLibGrid"></div>
+
+    <div class="tool-add-form">
+      <button type="button" id="newToolImageBtn" class="secondary-btn">이미지 선택</button>
+      <input type="file" accept="image/*" class="hidden-input" id="newToolImageInput">
+      <button type="button" id="addToolBtn" class="primary-btn">+ 도구 추가</button>
+    </div>
+  </section>
+
+  <section class="admin-section">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:10px;">
+      <div>
+        <h2 style="margin-bottom:0;">프로젝트 관리</h2>
+      </div>
+      <button type="button" id="addProjectBtn" class="primary-btn">+ 새 프로젝트 추가</button>
+    </div>
+    <p class="hint">카드를 클릭해서 펼치고 내용을 수정하세요. 모든 변경 사항은 자동 저장되고, 사이트(work.html, 메인 미리보기 6개 포함)에도 바로 반영돼요.</p>
+    <div id="projectList"></div>
+  </section>
+
+</main>
+
+<input type="file" accept="image/*" class="hidden-input" id="thumbFileInput">
+<input type="file" accept="image/*" multiple class="hidden-input" id="galleryFileInput">
+
+<script>
+  // ============ helpers ============
+  function escapeHtml(str) {
+    return String(str == null ? '' : str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ============ Tool library (shared with index.html) ============
+  const TOOLS_KEY = 'rubybay_tools';
+  function seedTools() {
+    return [
+      { id:'ps', name:'Photoshop', icon:{type:'emoji', value:'🖌️'} },
+      { id:'ai', name:'Illustrator', icon:{type:'emoji', value:'✒️'} },
+      { id:'figma', name:'Figma', icon:{type:'emoji', value:'🎨'} },
+      { id:'indesign', name:'InDesign', icon:{type:'emoji', value:'📄'} },
+      { id:'ppt', name:'PowerPoint', icon:{type:'emoji', value:'📊'} },
+      { id:'keynote', name:'Keynote', icon:{type:'emoji', value:'🎞️'} },
+      { id:'procreate', name:'Procreate', icon:{type:'emoji', value:'🖍️'} },
+      { id:'premiere', name:'Premiere Pro', icon:{type:'emoji', value:'🎬'} },
+    ];
+  }
+  function loadTools() {
+    try {
+      const raw = localStorage.getItem(TOOLS_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) { /* ignore corrupt data */ }
+    const seeded = seedTools();
+    localStorage.setItem(TOOLS_KEY, JSON.stringify(seeded));
+    return seeded;
+  }
+  function saveTools() { localStorage.setItem(TOOLS_KEY, JSON.stringify(TOOLS)); }
+  function getTool(id) { return TOOLS.find(t => t.id === id); }
+  function toolIconHtml(tool) {
+    if (!tool) return '';
+    if (tool.icon && tool.icon.type === 'image' && tool.icon.value) {
+      return `<img src="${tool.icon.value}" alt="">`;
+    }
+    return `<span class="chip-emoji">${(tool.icon && tool.icon.value) || '🔧'}</span>`;
+  }
+  let TOOLS = loadTools();
+
+  // ============ Project order (shared with index.html / work.html) ============
+  const ORDER_KEY = 'rubybay_project_order';
+  function seedOrder() { return ['p1','p2','p3','p4','p5','p6']; }
+  function loadOrder() {
+    try {
+      const raw = localStorage.getItem(ORDER_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) { /* ignore corrupt data */ }
+    const seeded = seedOrder();
+    localStorage.setItem(ORDER_KEY, JSON.stringify(seeded));
+    return seeded;
+  }
+  function saveOrder() { localStorage.setItem(ORDER_KEY, JSON.stringify(ORDER)); }
+  let ORDER = loadOrder();
+
+  // ============ Project data (defaults for the original 6, blank template for new ones) ============
+  function defaultProject() {
+    return { catLabel:'', desc:'', title:'프로젝트 제목을 입력하세요', period:'', tools:[], planning:0, design:0, cost:'', thumb:null, gallery:[] };
+  }
+  const PROJECT_DEFAULTS = {
+    p1: { catLabel:'브랜드 디자인', desc:'브랜드 아이덴티티 · 로고 · 가이드라인', tools:['ai','ps','figma','indesign'], planning:40, design:60 },
+    p2: { catLabel:'상세페이지', desc:'제품 상세페이지 · 스토리보드', tools:['ps','ai','figma','ppt'], planning:30, design:70 },
+    p3: { catLabel:'PPT 디자인', desc:'제안서 · IR덱 · 사내 보고서', tools:['ppt','keynote','ai','ps'], planning:50, design:50 },
+    p4: { catLabel:'패키지 디자인', desc:'제품 패키지 · 라벨 · 굿즈', tools:['ai','ps','procreate','indesign'], planning:35, design:65 },
+    p5: { catLabel:'마케팅 디자인', desc:'SNS 콘텐츠 · 배너 · 캠페인 비주얼', tools:['ps','ai','figma','premiere'], planning:45, design:55 },
+    p6: { catLabel:'브랜드 디자인', desc:'브랜드 아이덴티티 · 로고 · 가이드라인', tools:['ai','ps','figma','indesign'], planning:40, design:60 },
+  };
+  const STORAGE_PREFIX = 'rubybay_project_';
+
+  function getProject(id) {
+    const base = Object.assign(defaultProject(), PROJECT_DEFAULTS[id] || {});
+    try {
+      const raw = localStorage.getItem(STORAGE_PREFIX + id);
+      if (raw) Object.assign(base, JSON.parse(raw));
+    } catch (e) { /* ignore corrupt data */ }
+    return base;
+  }
+
+  const PROJECTS = {};
+  ORDER.forEach(id => { PROJECTS[id] = getProject(id); });
+
+  function saveProject(id) {
+    localStorage.setItem(STORAGE_PREFIX + id, JSON.stringify(PROJECTS[id]));
+  }
+
+  function createProject() {
+    const id = 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+    PROJECTS[id] = defaultProject();
+    ORDER.push(id);
+    saveOrder();
+    saveProject(id);
+    openIds.add(id);
+    renderProjectList();
+    const card = projectList.querySelector(`.project-card[data-pid="${id}"]`);
+    if (card && typeof card.scrollIntoView === 'function') card.scrollIntoView({ behavior:'smooth', block:'center' });
+  }
+
+  function deleteProject(id) {
+    if (!confirm('이 프로젝트를 삭제할까요? 되돌릴 수 없어요.')) return;
+    ORDER = ORDER.filter(pid => pid !== id);
+    saveOrder();
+    delete PROJECTS[id];
+    localStorage.removeItem(STORAGE_PREFIX + id);
+    openIds.delete(id);
+    renderProjectList();
+  }
+
+  const openIds = new Set();
+
+  // ============ Tool library UI ============
+  const toolLibGrid = document.getElementById('toolLibGrid');
+  const newToolImageBtn = document.getElementById('newToolImageBtn');
+  const newToolImageInput = document.getElementById('newToolImageInput');
+  const addToolBtn = document.getElementById('addToolBtn');
+
+  let pendingToolImage = null;
+
+  newToolImageBtn.addEventListener('click', () => newToolImageInput.click());
+  newToolImageInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      pendingToolImage = reader.result;
+      newToolImageBtn.textContent = '이미지 선택됨 ✓';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function renderToolLib() {
+    toolLibGrid.innerHTML = TOOLS.map(t => `
+      <div class="tool-lib-item">
+        ${toolIconHtml(t)}
+        <button type="button" data-del="${t.id}" title="삭제">&times;</button>
+      </div>
+    `).join('') || '<p class="empty-state">등록된 도구가 없어요. 아래에서 추가해보세요.</p>';
+  }
+
+  toolLibGrid.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-del]');
+    if (!btn) return;
+    const tid = btn.dataset.del;
+    if (!confirm('이 도구를 삭제하면 사용 중인 모든 프로젝트에서도 함께 제거돼요. 삭제할까요?')) return;
+    TOOLS = TOOLS.filter(t => t.id !== tid);
+    saveTools();
+    Object.keys(PROJECTS).forEach(pid => {
+      if (PROJECTS[pid].tools.includes(tid)) {
+        PROJECTS[pid].tools = PROJECTS[pid].tools.filter(t => t !== tid);
+        saveProject(pid);
+      }
+    });
+    renderToolLib();
+    renderProjectList();
+  });
+
+  addToolBtn.addEventListener('click', () => {
+    if (!pendingToolImage) { alert('아이콘 이미지를 먼저 선택해주세요.'); return; }
+    const icon = { type:'image', value: pendingToolImage };
+    const id = 't_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+    TOOLS.push({ id, name:'', icon });
+    saveTools();
+
+    pendingToolImage = null;
+    newToolImageBtn.textContent = '이미지 선택';
+    newToolImageInput.value = '';
+
+    renderToolLib();
+    renderProjectList();
+  });
+
+  // ============ Project list UI ============
+  const projectList = document.getElementById('projectList');
+  const thumbFileInput = document.getElementById('thumbFileInput');
+  const galleryFileInput = document.getElementById('galleryFileInput');
+  const addProjectBtn = document.getElementById('addProjectBtn');
+  let pendingThumbPid = null;
+  let pendingGalleryPid = null;
+
+  addProjectBtn.addEventListener('click', createProject);
+
+  function toolSelectHtml(pid) {
+    const p = PROJECTS[pid];
+    const chips = TOOLS.map(t => `
+      <button type="button" class="tool-select-chip${p.tools.includes(t.id) ? ' selected' : ''}" data-pid="${pid}" data-tid="${t.id}" title="${escapeHtml(t.name)}">
+        ${toolIconHtml(t)}
+      </button>
+    `).join('') || '<p class="empty-state">먼저 위에서 도구를 등록해주세요.</p>';
+    return `<div class="tool-select-grid">${chips}</div>
+      <div class="tool-select-hint" id="tool-hint-${pid}">현재 ${p.tools.length}개 선택됨 (최소 4개, 최대 8개)</div>`;
+  }
+
+  function galleryEditHtml(pid) {
+    const p = PROJECTS[pid];
+    const items = p.gallery.map((src, idx) => `
+      <div class="gallery-edit-item">
+        <img src="${src}" alt="">
+        <button type="button" data-pid="${pid}" data-idx="${idx}">&times;</button>
+      </div>
+    `).join('');
+    return `<div class="gallery-edit-list">
+      ${items}
+      <button type="button" class="gallery-edit-add" data-pid="${pid}">+ 이미지 추가</button>
+    </div>`;
+  }
+
+  function projectCardHtml(pid) {
+    const p = PROJECTS[pid];
+    const thumbHtml = p.thumb ? `<img src="${p.thumb}" alt="">` : '🖼';
+    const thumbUploadHtml = p.thumb ? `<img src="${p.thumb}" alt="">` : '클릭해서<br>대표 이미지 업로드';
+    return `
+    <div class="project-card" data-pid="${pid}">
+      <div class="project-card-head" data-pid="${pid}">
+        <div class="ph-thumb">${thumbHtml}</div>
+        <div class="ph-info">
+          <div class="ph-cat">${escapeHtml(p.catLabel) || '(분류 없음)'}</div>
+          <div class="ph-title" id="ph-title-${pid}">${escapeHtml(p.title) || '(제목 없음)'}</div>
+        </div>
+        <button type="button" class="card-delete-btn" data-del-pid="${pid}">삭제</button>
+        <div class="chevron">▾</div>
+      </div>
+      <div class="project-card-body">
+        <div class="form-grid">
+          <div class="thumb-upload" data-pid="${pid}">${thumbUploadHtml}</div>
+          <div>
+            <div class="form-row">
+              <label>분류</label>
+              <input type="text" class="cat-input cat-input-field" data-pid="${pid}" value="${escapeHtml(p.catLabel)}" placeholder="예: 브랜드 디자인">
+            </div>
+            <div class="form-row">
+              <label>프로젝트 이름</label>
+              <input type="text" class="title-input" data-pid="${pid}" value="${escapeHtml(p.title)}">
+            </div>
+            <div class="form-row">
+              <label>작업 기간</label>
+              <input type="text" class="period-input" data-pid="${pid}" value="${escapeHtml(p.period)}" placeholder="예: 2024.01 – 2024.03">
+            </div>
+            <div class="form-row">
+              <label>작업 비용</label>
+              <input type="text" class="cost-input" data-pid="${pid}" value="${escapeHtml(p.cost)}" placeholder="예: 3,000,000원">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>작업한 툴</label>
+          ${toolSelectHtml(pid)}
+        </div>
+
+        <div class="form-row">
+          <label>작업 관여도</label>
+          <div class="involve-edit-row">
+            <label><span>기획</span><span id="planning-live-${pid}">${p.planning}%</span></label>
+            <input type="range" class="planning-range" data-pid="${pid}" min="0" max="100" value="${p.planning}">
+          </div>
+          <div class="involve-edit-row">
+            <label><span>디자인</span><span id="design-live-${pid}">${p.design}%</span></label>
+            <input type="range" class="design-range" data-pid="${pid}" min="0" max="100" value="${p.design}">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>작업 이미지</label>
+          ${galleryEditHtml(pid)}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function renderProjectList() {
+    projectList.innerHTML = ORDER.map(projectCardHtml).join('') || '<p class="empty-state">등록된 프로젝트가 없어요. 위 버튼으로 추가해보세요.</p>';
+    openIds.forEach(pid => {
+      const el = projectList.querySelector(`.project-card[data-pid="${pid}"]`);
+      if (el) el.classList.add('open');
+    });
+  }
+
+  function flashToolHint(pid, msg) {
+    const el = document.getElementById(`tool-hint-${pid}`);
+    if (!el) return;
+    const original = `현재 ${PROJECTS[pid].tools.length}개 선택됨 (최소 4개, 최대 8개)`;
+    el.textContent = msg;
+    el.classList.add('warn');
+    setTimeout(() => {
+      el.textContent = original;
+      el.classList.remove('warn');
+    }, 1800);
+  }
+
+  function toggleProjectTool(pid, tid) {
+    const p = PROJECTS[pid];
+    const has = p.tools.includes(tid);
+    if (has) {
+      if (p.tools.length <= 4) { flashToolHint(pid, '최소 4개는 선택되어 있어야 해요.'); return; }
+      p.tools = p.tools.filter(t => t !== tid);
+    } else {
+      if (p.tools.length >= 8) { flashToolHint(pid, '최대 8개까지만 선택할 수 있어요.'); return; }
+      p.tools.push(tid);
+    }
+    saveProject(pid);
+    renderProjectList();
+  }
+
+  projectList.addEventListener('click', (e) => {
+    const delBtn = e.target.closest('.card-delete-btn');
+    if (delBtn) { deleteProject(delBtn.dataset.delPid); return; }
+
+    const head = e.target.closest('.project-card-head');
+    if (head) {
+      const pid = head.dataset.pid;
+      const card = head.closest('.project-card');
+      card.classList.toggle('open');
+      if (card.classList.contains('open')) openIds.add(pid); else openIds.delete(pid);
+      return;
+    }
+
+    const toolChip = e.target.closest('.tool-select-chip');
+    if (toolChip) { toggleProjectTool(toolChip.dataset.pid, toolChip.dataset.tid); return; }
+
+    const thumbBtn = e.target.closest('.thumb-upload');
+    if (thumbBtn) { pendingThumbPid = thumbBtn.dataset.pid; thumbFileInput.click(); return; }
+
+    const galleryAddBtn = e.target.closest('.gallery-edit-add');
+    if (galleryAddBtn) { pendingGalleryPid = galleryAddBtn.dataset.pid; galleryFileInput.click(); return; }
+
+    const galleryRemoveBtn = e.target.closest('.gallery-edit-item button');
+    if (galleryRemoveBtn) {
+      const pid = galleryRemoveBtn.dataset.pid;
+      const idx = Number(galleryRemoveBtn.dataset.idx);
+      PROJECTS[pid].gallery.splice(idx, 1);
+      saveProject(pid);
+      renderProjectList();
+      return;
+    }
+  });
+
+  projectList.addEventListener('input', (e) => {
+    const pid = e.target.dataset.pid;
+    if (!pid) return;
+
+    if (e.target.classList.contains('cat-input-field')) {
+      PROJECTS[pid].catLabel = e.target.value;
+      saveProject(pid);
+      const head = projectList.querySelector(`.project-card[data-pid="${pid}"] .ph-cat`);
+      if (head) head.textContent = e.target.value || '(분류 없음)';
+    }
+    if (e.target.classList.contains('title-input')) {
+      PROJECTS[pid].title = e.target.value;
+      saveProject(pid);
+      const headTitle = document.getElementById(`ph-title-${pid}`);
+      if (headTitle) headTitle.textContent = e.target.value || '(제목 없음)';
+    }
+    if (e.target.classList.contains('period-input')) {
+      PROJECTS[pid].period = e.target.value;
+      saveProject(pid);
+    }
+    if (e.target.classList.contains('cost-input')) {
+      PROJECTS[pid].cost = e.target.value;
+      saveProject(pid);
+    }
+    if (e.target.classList.contains('planning-range')) {
+      PROJECTS[pid].planning = Number(e.target.value);
+      const live = document.getElementById(`planning-live-${pid}`);
+      if (live) live.textContent = e.target.value + '%';
+      saveProject(pid);
+    }
+    if (e.target.classList.contains('design-range')) {
+      PROJECTS[pid].design = Number(e.target.value);
+      const live = document.getElementById(`design-live-${pid}`);
+      if (live) live.textContent = e.target.value + '%';
+      saveProject(pid);
+    }
+  });
+
+  thumbFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file || !pendingThumbPid) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      PROJECTS[pendingThumbPid].thumb = reader.result;
+      saveProject(pendingThumbPid);
+      renderProjectList();
+    };
+    reader.readAsDataURL(file);
+    thumbFileInput.value = '';
+  });
+
+  galleryFileInput.addEventListener('change', (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length || !pendingGalleryPid) return;
+    const pid = pendingGalleryPid;
+    let remaining = files.length;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        PROJECTS[pid].gallery.push(reader.result);
+        remaining -= 1;
+        if (remaining === 0) {
+          saveProject(pid);
+          renderProjectList();
+          openIds.add(pid);
+          const card = projectList.querySelector(`.project-card[data-pid="${pid}"]`);
+          if (card) card.classList.add('open');
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    galleryFileInput.value = '';
+  });
+
+  // ============ init ============
+  renderToolLib();
+  renderProjectList();
+</script>
+
+</body>
+</html>

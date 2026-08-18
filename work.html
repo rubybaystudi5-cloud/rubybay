@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>작업물 | 루비베이스튜디오</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nata+Sans:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+  /* SUIT — Light(200) / Medium(500) / Bold(700) only */
+  @font-face{
+    font-family:'SUIT';
+    font-weight:200;
+    font-style:normal;
+    font-display:swap;
+    src:url('https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2/fonts/static/woff2/SUIT-ExtraLight.woff2') format('woff2');
+  }
+  @font-face{
+    font-family:'SUIT';
+    font-weight:500;
+    font-style:normal;
+    font-display:swap;
+    src:url('https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2/fonts/static/woff2/SUIT-Medium.woff2') format('woff2');
+  }
+  @font-face{
+    font-family:'SUIT';
+    font-weight:700;
+    font-style:normal;
+    font-display:swap;
+    src:url('https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2/fonts/static/woff2/SUIT-Bold.woff2') format('woff2');
+  }
+
+  :root{
+    --ruby:#b61d22;
+    --ruby-dark:#761316;
+    --ink:#1a1a1a;
+    --gray:#6b6b6b;
+    --line:#e6e2e0;
+    --bg:#fdfcfb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'SUIT', sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    line-height:1.7;
+    font-weight:200;
+    letter-spacing:-0.03em;
+  }
+  a{text-decoration:none;color:inherit;}
+  button{font-family:inherit;}
+
+  /* ---------- Header ---------- */
+  header{
+    position:fixed;top:0;left:0;right:0;
+    display:flex;justify-content:flex-start;align-items:center;
+    gap:100px;
+    padding:28px 6vw;
+    z-index:100;
+    background:rgba(12,12,12,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid transparent;
+    transition:border-color .3s;
+  }
+  header.scrolled{border-bottom-color:rgba(255,255,255,0.12);}
+  .logo{
+    font-family:'Nata Sans', sans-serif;
+    font-size:22px;
+    font-weight:700;
+    color:var(--ruby);
+  }
+  nav ul{display:flex;gap:52px;list-style:none;}
+  nav a{
+    position:relative;
+    display:inline-block;
+    font-family:'Nata Sans', sans-serif;
+    font-size:19px;
+    letter-spacing:-0.02em;
+    font-weight:300;
+    color:rgba(255,255,255,0.65);
+    transition:color .25s;
+  }
+  nav a:hover{color:var(--ruby);}
+  nav a .txt-en{opacity:1;transition:opacity .2s ease;}
+  nav a .txt-ko{
+    position:absolute;left:50%;top:0;
+    transform:translateX(-50%);
+    opacity:0;white-space:nowrap;
+    font-family:'SUIT', sans-serif;
+    font-weight:300;
+    transition:opacity .2s ease, font-weight .2s ease;
+  }
+  nav a:hover .txt-en{opacity:0;}
+  nav a:hover .txt-ko{opacity:1;font-weight:700;}
+  .nav-toggle{display:none;margin-left:auto;font-size:22px;background:none;border:none;cursor:pointer;color:#fff;}
+
+  @media(max-width:760px){
+    nav ul{
+      position:fixed;top:76px;left:0;right:0;
+      flex-direction:column;gap:0;
+      background:#0c0c0c;
+      border-bottom:1px solid rgba(255,255,255,0.12);
+      transform:translateY(-120%);
+      transition:transform .3s;
+    }
+    nav ul.open{transform:translateY(0);}
+    nav ul li{border-top:1px solid rgba(255,255,255,0.12);}
+    nav ul li a{display:block;padding:18px 6vw;}
+    nav ul li a .txt-ko{left:6vw;top:18px;transform:none;}
+    .nav-toggle{display:block;}
+  }
+
+  section{padding:150px 6vw;}
+
+  /* ---------- Portfolio ---------- */
+  .portfolio{background:#0c0c0c;padding:150px 0 0;}
+  .portfolio-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:0 6vw;
+    margin-bottom:32px;
+  }
+  .portfolio-title{
+    font-family:'Nata Sans', sans-serif;
+    font-size:clamp(22px,2.4vw,30px);
+    font-weight:700;
+    letter-spacing:1px;
+    color:#fff;
+  }
+
+  .portfolio-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:3px;
+  }
+  @media(max-width:900px){
+    .portfolio-grid{grid-template-columns:repeat(2,1fr);}
+  }
+  @media(max-width:560px){
+    .portfolio-grid{grid-template-columns:1fr;}
+  }
+
+  .portfolio-tile{
+    position:relative;
+    aspect-ratio:16/9;
+    background:#1a1a1a;
+    overflow:hidden;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .portfolio-tile::before{
+    content:attr(data-cat);
+    font-family:'Nata Sans', sans-serif;
+    font-weight:500;
+    font-size:16px;
+    color:rgba(255,255,255,0.6);
+    letter-spacing:0.3px;
+    text-transform:lowercase;
+    padding-bottom:4px;
+    border-bottom:1px solid var(--ruby);
+  }
+  .portfolio-tile.has-image::before{display:none;}
+  .portfolio-tile img{
+    position:absolute;inset:0;
+    width:100%;height:100%;
+    object-fit:cover;
+    transition:transform .6s ease;
+  }
+  .portfolio-tile:hover img{transform:scale(1.06);}
+  .portfolio-tile-info{
+    position:absolute;inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:24px;
+    background:rgba(0,0,0,0.5);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    opacity:0;
+    transition:opacity .3s ease;
+  }
+  .portfolio-tile:hover .portfolio-tile-info{
+    opacity:1;
+  }
+  .portfolio-tile-info h3{
+    font-family:'SUIT', sans-serif;
+    font-size:18px;font-weight:700;
+    color:#fff;
+    margin-bottom:8px;
+  }
+  .portfolio-tile-info p{font-size:12px;color:rgba(255,255,255,0.75);}
+
+  footer{
+    padding:80px 6vw;
+    background:var(--ruby);
+    border-top:1px solid rgba(255,255,255,0.12);
+    position:relative;
+    overflow:hidden;
+  }
+  .footer-logo-bg{
+    position:absolute;
+    top:50%;
+    right:15px;
+    transform:translateY(-50%);
+    width:420px;
+    height:420px;
+    color:var(--ruby-dark);
+    opacity:0.45;
+    pointer-events:none;
+  }
+  .footer-content{
+    position:relative;
+    z-index:1;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:48px;
+    flex-wrap:wrap;
+  }
+  .footer-text{
+    flex:1 1 auto;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    font-size:12px;
+    color:#c9a6ae;
+  }
+  .footer-biz{
+    font-size:12px;
+    line-height:1.9;
+    color:rgba(201,166,174,0.85);
+  }
+  .footer-meta{
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+    font-family:'Nata Sans', sans-serif;
+  }
+
+  .fade-up{
+    opacity:0;
+    transform:translateY(24px);
+    transition:opacity .7s ease, transform .7s ease;
+  }
+  .fade-up.show{opacity:1;transform:translateY(0);}
+
+  /* ---------- Project Detail Overlay ---------- */
+  .detail-overlay{
+    position:fixed;inset:0;
+    background:#0c0c0c;
+    color:#fff;
+    z-index:1000;
+    overflow-y:auto;
+    display:none;
+  }
+  .detail-overlay.open{display:block;}
+  .detail-back{
+    position:sticky;top:0;
+    background:rgba(12,12,12,.92);
+    backdrop-filter:blur(6px);
+    padding:24px 6vw;
+    border-bottom:1px solid rgba(255,255,255,0.12);
+    display:flex;align-items:center;gap:8px;
+    font-size:14pt;font-weight:500;color:rgba(255,255,255,0.65);
+    cursor:pointer;
+    z-index:5;
+  }
+  .detail-back:hover{color:var(--ruby);}
+  .detail-wrap{
+    padding:60px 6vw 140px;
+    max-width:1280px;
+    margin:0 auto;
+  }
+  .detail-top{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:64px;
+    margin-bottom:110px;
+  }
+  @media(max-width:900px){.detail-top{grid-template-columns:1fr;gap:40px;}}
+
+  .detail-thumb{
+    aspect-ratio:4/3;
+    border:1px solid rgba(255,255,255,0.15);
+    background:linear-gradient(135deg,#1a1a1a,#0c0c0c);
+    position:relative;
+    overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .detail-thumb img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+  .upload-hint{font-size:13px;color:rgba(255,255,255,0.5);text-align:center;padding:0 24px;position:relative;z-index:1;}
+  .upload-hint span{display:block;font-size:26px;margin-bottom:10px;color:var(--ruby);}
+
+  .detail-title{
+    font-family:'SUIT', sans-serif;
+    font-size:clamp(28px,3vw,42px);
+    font-weight:700;
+    border:none;background:none;
+    width:100%;color:#fff;
+    margin-bottom:30px;
+    padding:4px 0;
+    border-bottom:1px solid transparent;
+  }
+
+  .field-row{
+    display:flex;align-items:center;
+    gap:24px;margin-bottom:22px;
+  }
+  .field-label{
+    flex:0 0 auto;
+    font-size:13px;color:rgba(255,255,255,0.5);
+    letter-spacing:-0.03em;
+    white-space:nowrap;
+  }
+  .period-input{
+    border:none;
+    background:none;font-family:'SUIT', sans-serif;
+    font-size:15px;color:#fff;
+    letter-spacing:-0.03em;
+    padding:0;
+  }
+
+  .tool-chips{display:flex;flex-wrap:wrap;gap:10px;}
+  .tool-chip{
+    display:flex;align-items:center;justify-content:center;
+    width:40px;height:40px;
+    padding:0;border:1px solid rgba(255,255,255,0.15);
+    border-radius:8px;
+    background:#1a1a1a;
+    overflow:hidden;
+  }
+  .tool-chip img{width:100%;height:100%;object-fit:cover;}
+
+  .involve-inline{
+    display:flex;align-items:center;flex-wrap:wrap;
+    gap:14px;font-size:14px;color:#fff;letter-spacing:-0.03em;
+  }
+  .involve-inline b{font-family:'SUIT', sans-serif;color:var(--ruby);font-weight:700;}
+  .involve-inline .divider{color:rgba(255,255,255,0.3);}
+
+  .detail-gallery-head{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    margin-bottom:32px;border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:20px;
+  }
+  .detail-gallery-head h3{font-family:'SUIT', sans-serif;font-size:28px;font-weight:700;color:#fff;}
+  .detail-gallery-head p{font-size:13px;color:rgba(255,255,255,0.5);}
+  .gallery-grid{
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+  }
+  .gallery-item{
+    position:relative;width:100%;
+    border:1px solid rgba(255,255,255,0.15);overflow:hidden;background:#1a1a1a;
+    line-height:0;
+  }
+  .gallery-item img{width:100%;height:auto;display:block;}
+
+  .hidden-input{display:none;}
+</style>
+</head>
+<body>
+
+<header id="siteHeader">
+  <a href="index.html" class="logo">Ruby<span>bay</span> studio</a>
+  <nav>
+    <ul id="navList">
+      <li><a href="about.html"><span class="txt-en">About</span><span class="txt-ko">루비베이</span></a></li>
+      <li><a href="work.html"><span class="txt-en">Work</span><span class="txt-ko">작업물</span></a></li>
+      <li><a href="price.html"><span class="txt-en">Price</span><span class="txt-ko">단가</span></a></li>
+      <li><a href="contact.html"><span class="txt-en">Contact</span><span class="txt-ko">문의</span></a></li>
+    </ul>
+  </nav>
+  <button class="nav-toggle" id="navToggle">☰</button>
+</header>
+
+<section class="portfolio" id="work">
+  <div class="portfolio-head">
+    <h2 class="portfolio-title">Work</h2>
+  </div>
+
+  <div class="portfolio-grid" id="portfolioGrid"></div>
+</section>
+
+<footer>
+  <svg class="footer-logo-bg" viewBox="0 0 378 378" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M170.231 114.777C170.622 119.177 171.051 123.656 171.558 128.173C172.065 132.69 172.299 137.986 172.299 144.022C172.299 157.963 170.231 170.386 166.095 181.29C161.959 192.193 156.535 201.5 149.824 209.172C143.113 216.843 135.543 222.724 127.037 226.773C118.569 230.823 109.985 232.887 101.323 232.887C94.2209 232.887 87.8217 231.563 82.0858 228.876C76.3499 226.228 71.4724 222.607 67.4534 218.089C63.3954 213.572 60.2347 208.276 57.9716 202.24C55.7085 196.204 54.5769 189.818 54.5769 183.081C54.5769 168.672 57.4643 155.627 63.3173 143.867C69.1313 132.145 76.7791 121.709 86.2219 112.518C95.7037 103.328 106.434 95.3841 118.452 88.6471C130.47 81.9102 142.722 76.3805 155.131 72.0969C167.539 67.8133 179.674 64.6201 191.497 62.5172C203.32 60.4144 213.777 59.363 222.869 59.363C234.887 59.363 245.696 60.0639 255.255 61.4658C264.815 62.8677 273.048 64.5033 279.955 66.3335C285.067 64.4643 289.71 62.9845 293.846 61.8163C297.982 60.648 302.079 59.8303 306.137 59.363C310.195 58.8957 314.175 58.5452 318.116 58.3115C322.057 58.0779 326.31 57.9611 330.837 57.9611L331.422 62.1278C320.77 62.1278 312.693 62.9456 307.152 64.5812C301.611 66.2167 297.085 68.3196 293.534 70.8508C298.84 73.6546 303.796 76.731 308.322 80.08C312.849 83.4679 316.751 87.2842 319.989 91.5678C323.228 95.8514 325.764 100.797 327.52 106.366C329.315 111.934 330.173 118.321 330.173 125.525C330.173 137.831 327.403 147.994 321.901 156.016C316.36 164.038 309.415 170.347 301.065 175.02C292.675 179.654 283.506 182.964 273.556 184.95C263.606 186.936 254.163 188.026 245.305 188.26V188.961C249.442 191.064 253.422 193.478 257.284 196.282C261.147 199.086 264.464 202.396 267.352 206.212C270.2 210.029 272.541 214.468 274.297 219.452C276.053 224.437 276.95 230.2 276.95 236.704C276.95 241.805 276.248 247.14 274.882 252.748C273.517 258.316 271.917 263.729 270.161 268.947C268.366 274.166 266.805 279.15 265.44 283.94C264.074 288.691 263.372 292.935 263.372 296.674C263.372 300.14 264.191 302.827 265.869 304.696C267.547 306.565 269.576 307.5 271.917 307.5C275.468 307.5 279.643 305.864 284.481 302.632C289.32 299.4 294.275 295.272 299.426 290.249C304.537 285.264 309.727 279.578 314.956 273.192C320.184 266.806 325.101 260.458 329.744 254.188C334.387 247.919 338.524 241.922 342.152 236.236C345.781 230.551 348.591 225.956 350.581 222.49L352.961 223.892C346.64 233.861 339.655 244.57 331.968 255.941C324.281 267.312 316.126 277.709 307.581 287.133C298.997 296.557 290.178 304.384 281.126 310.654C272.073 316.924 262.981 320.078 253.929 320.078C243.862 320.078 236.214 316.924 231.024 310.654C225.796 304.384 223.181 295.661 223.181 284.524C223.181 277.553 224.391 270.7 226.888 263.963C229.346 257.226 232.078 250.606 235.004 244.103C237.97 237.599 240.662 231.33 243.12 225.294C245.579 219.258 246.827 213.572 246.827 208.237C246.827 201.5 245.188 196.516 241.95 193.245C238.711 190.012 234.614 188.377 229.659 188.377H226.42L227.317 184.21C236.994 184.21 245.344 183.237 252.446 181.251C259.548 179.265 266.727 174.475 274.024 166.803C279.526 161.001 284.091 153.407 287.642 143.983C291.193 134.559 292.949 124.863 292.949 114.894C292.949 109.325 291.7 103.64 289.242 97.8374C286.783 92.0351 283.467 87.1674 279.331 83.1953C272.619 90.3995 266.376 98.3047 260.562 106.872C254.748 115.478 249.129 124.824 243.706 134.91C238.282 144.996 232.819 156.055 227.278 168.01C221.737 179.966 215.846 192.816 209.524 206.524C200.043 226.968 190.171 244.258 179.791 258.433C169.451 272.608 158.643 284.096 147.405 292.935C136.167 301.775 124.578 308.162 112.638 312.095C100.698 316.028 88.446 318.014 75.8036 318.014C60.82 318.014 48.6069 314.548 39.1251 307.578C29.6433 300.607 24.9219 290.054 24.9219 275.879C24.9219 268.675 26.7948 262.483 30.5407 257.226C34.2866 252.008 39.3982 249.399 45.9145 249.399C51.6114 249.399 56.1767 251.151 59.5324 254.617C62.8881 258.083 64.5659 263.223 64.5659 269.96C64.5659 273.893 63.7855 277.515 62.1857 280.747C60.5859 284.018 57.8545 286.549 53.9135 288.418C53.5234 290.287 53.3283 291.456 53.3283 291.884C53.3283 299.322 55.5134 304.852 59.8446 308.434C64.1757 312.017 69.7165 313.847 76.3889 313.847C84.6611 313.847 92.5041 311.511 99.9178 306.877C107.332 302.243 114.277 296.129 120.754 288.574C127.271 281.019 133.358 272.452 139.094 262.795C144.791 253.176 150.097 243.402 154.936 233.51C159.774 223.658 164.183 214.117 168.241 204.927C172.299 195.737 175.967 187.793 179.323 181.056C185.839 166.881 191.926 154.926 197.662 145.191C203.398 135.455 209.446 126.654 215.846 118.905C222.245 111.117 229.463 103.795 237.423 96.9417C245.422 90.088 254.904 82.4944 265.947 74.1219C259.626 70.1888 252.329 67.4628 244.057 65.9441C235.785 64.4254 228.176 63.6855 221.269 63.6855C212.178 63.6855 202.618 64.7759 192.59 66.9955C182.523 69.2152 172.612 72.5253 162.857 76.9257C153.102 81.3261 143.815 86.8169 135.036 93.3202C126.256 99.8234 118.452 107.378 111.663 115.945C104.873 124.551 99.4496 134.131 95.3915 144.684C91.3335 155.238 89.1484 166.803 88.7192 179.342C88.7192 184.21 89.2264 189.039 90.2019 193.79C91.1774 198.541 92.6992 202.863 94.7672 206.68C96.8353 210.496 99.5276 213.689 102.883 216.259C106.239 218.829 110.297 220.192 115.018 220.426C124.071 220.192 131.992 217.583 138.664 212.599C145.376 207.614 150.956 201.345 155.365 193.79C159.813 186.235 163.091 177.979 165.276 169.062C167.461 160.105 168.515 151.694 168.515 143.789C168.515 138.22 168.319 133.041 167.929 128.29C167.539 123.539 167.149 119.177 166.759 115.205L169.997 114.855L170.231 114.777Z" fill="currentColor"/></svg>
+  <div class="footer-content">
+    <div class="footer-text">
+      <div class="footer-biz">
+        루비베이 · 배수겸 · 사업자등록번호 759-10-03151<br>
+        대구광역시 동구 해동로 54 · 대표전화 010 4017 4040
+      </div>
+      <div class="footer-meta">
+        <span>© 2026 RUBYBAY STUDIO. All rights reserved.</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ---------- Project Detail Overlay ---------- -->
+<div class="detail-overlay" id="detailOverlay">
+  <div class="detail-back" id="detailBack">&lt; work</div>
+  <div class="detail-wrap">
+    <div class="detail-top">
+      <div class="detail-thumb" id="detailThumb">
+        <div class="upload-hint" id="detailThumbHint"><span>—</span>준비 중인 이미지예요</div>
+      </div>
+
+      <div class="detail-info">
+        <h2 class="detail-title" id="detailTitle"></h2>
+
+        <div class="field-row">
+          <span class="field-label">작업기간</span>
+          <div class="period-input" id="detailPeriod">-</div>
+        </div>
+
+        <div class="field-row">
+          <span class="field-label">사용된툴</span>
+          <div class="tool-chips" id="toolChips"></div>
+        </div>
+
+        <div class="field-row">
+          <span class="field-label">관여도</span>
+          <div class="involve-inline">
+            <span>기획 <b id="planningVal">0%</b></span>
+            <span class="divider">ㅣ</span>
+            <span>디자인 <b id="designVal">0%</b></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-gallery">
+      <div class="detail-gallery-head">
+        <h3>작업 이미지</h3>
+      </div>
+      <div class="gallery-grid" id="galleryGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============ header scroll style ============
+  const header = document.getElementById('siteHeader');
+  window.addEventListener('scroll', () => {
+    header.classList.toggle('scrolled', window.scrollY > 20);
+  });
+
+  // ============ mobile nav toggle ============
+  const navToggle = document.getElementById('navToggle');
+  const navList = document.getElementById('navList');
+  navToggle.addEventListener('click', () => navList.classList.toggle('open'));
+  navList.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navList.classList.remove('open')));
+
+  // ============ fade-up reveal ============
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('show'); });
+  }, {threshold:0.15});
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  // ============ Tool library (shared with admin.html) ============
+  const TOOLS_KEY = 'rubybay_tools';
+  function seedTools() {
+    return [
+      { id:'ps', name:'Photoshop', icon:{type:'emoji', value:'🖌️'} },
+      { id:'ai', name:'Illustrator', icon:{type:'emoji', value:'✒️'} },
+      { id:'figma', name:'Figma', icon:{type:'emoji', value:'🎨'} },
+      { id:'indesign', name:'InDesign', icon:{type:'emoji', value:'📄'} },
+      { id:'ppt', name:'PowerPoint', icon:{type:'emoji', value:'📊'} },
+      { id:'keynote', name:'Keynote', icon:{type:'emoji', value:'🎞️'} },
+      { id:'procreate', name:'Procreate', icon:{type:'emoji', value:'🖍️'} },
+      { id:'premiere', name:'Premiere Pro', icon:{type:'emoji', value:'🎬'} },
+    ];
+  }
+  function loadTools() {
+    try {
+      const raw = localStorage.getItem(TOOLS_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) { /* ignore corrupt data */ }
+    const seeded = seedTools();
+    localStorage.setItem(TOOLS_KEY, JSON.stringify(seeded));
+    return seeded;
+  }
+  function getTool(id) { return TOOLS.find(t => t.id === id); }
+  function toolIconHtml(tool) {
+    if (!tool) return '';
+    if (tool.icon && tool.icon.type === 'image' && tool.icon.value) {
+      return `<img src="${tool.icon.value}" alt="">`;
+    }
+    return `<span class="chip-emoji">${(tool.icon && tool.icon.value) || '🔧'}</span>`;
+  }
+  const TOOLS = loadTools();
+
+  // ============ Project order (shared with admin.html / index.html) ============
+  const ORDER_KEY = 'rubybay_project_order';
+  function seedOrder() { return ['p1','p2','p3','p4','p5','p6']; }
+  function loadOrder() {
+    try {
+      const raw = localStorage.getItem(ORDER_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) { /* ignore corrupt data */ }
+    const seeded = seedOrder();
+    localStorage.setItem(ORDER_KEY, JSON.stringify(seeded));
+    return seeded;
+  }
+  const ORDER = loadOrder();
+
+  // ============ Project data (defaults for the original 6, blank template for new ones) ============
+  function defaultProject() {
+    return { catLabel:'', desc:'', title:'프로젝트 제목을 입력하세요', period:'', tools:[], planning:0, design:0, cost:'', thumb:null, gallery:[] };
+  }
+  const PROJECT_DEFAULTS = {
+    p1: { catLabel:'브랜드 디자인', desc:'브랜드 아이덴티티 · 로고 · 가이드라인', tools:['ai','ps','figma','indesign'], planning:40, design:60 },
+    p2: { catLabel:'상세페이지', desc:'제품 상세페이지 · 스토리보드', tools:['ps','ai','figma','ppt'], planning:30, design:70 },
+    p3: { catLabel:'PPT 디자인', desc:'제안서 · IR덱 · 사내 보고서', tools:['ppt','keynote','ai','ps'], planning:50, design:50 },
+    p4: { catLabel:'패키지 디자인', desc:'제품 패키지 · 라벨 · 굿즈', tools:['ai','ps','procreate','indesign'], planning:35, design:65 },
+    p5: { catLabel:'마케팅 디자인', desc:'SNS 콘텐츠 · 배너 · 캠페인 비주얼', tools:['ps','ai','figma','premiere'], planning:45, design:55 },
+    p6: { catLabel:'브랜드 디자인', desc:'브랜드 아이덴티티 · 로고 · 가이드라인', tools:['ai','ps','figma','indesign'], planning:40, design:60 },
+  };
+  const STORAGE_PREFIX = 'rubybay_project_';
+
+  function getProject(id) {
+    const base = Object.assign(defaultProject(), PROJECT_DEFAULTS[id] || {});
+    try {
+      const raw = localStorage.getItem(STORAGE_PREFIX + id);
+      if (raw) Object.assign(base, JSON.parse(raw));
+    } catch (e) { /* ignore corrupt data */ }
+    return base;
+  }
+
+  const PROJECTS = {};
+  ORDER.forEach(id => { PROJECTS[id] = getProject(id); });
+
+  const CATEGORY_EN = {
+    '브랜드 디자인':'BRAND',
+    '상세페이지':'DETAIL',
+    'PPT 디자인':'PPT',
+    '패키지 디자인':'PACKAGE',
+    '마케팅 디자인':'MARKETING',
+  };
+  function categoryEn(catLabel) { return CATEGORY_EN[catLabel] || 'WORK'; }
+
+  // ============ Portfolio grid (full list — grows as projects are added in admin.html) ============
+  const portfolioGrid = document.getElementById('portfolioGrid');
+
+  function renderPortfolioGrid() {
+    portfolioGrid.innerHTML = '';
+    ORDER.forEach(id => {
+      const p = PROJECTS[id];
+      const tile = document.createElement('div');
+      tile.className = 'portfolio-tile' + (p.thumb ? ' has-image' : '');
+      tile.dataset.cat = categoryEn(p.catLabel);
+      tile.dataset.id = id;
+      tile.tabIndex = 0;
+      tile.setAttribute('role', 'button');
+
+      if (p.thumb) {
+        const img = document.createElement('img');
+        img.src = p.thumb;
+        tile.appendChild(img);
+      }
+
+      const info = document.createElement('div');
+      info.className = 'portfolio-tile-info';
+      const titleEl = document.createElement('h3');
+      titleEl.textContent = p.title || '프로젝트 제목을 입력하세요';
+      const descEl = document.createElement('p');
+      descEl.textContent = p.desc || p.catLabel || '';
+      info.appendChild(titleEl);
+      info.appendChild(descEl);
+      tile.appendChild(info);
+
+      tile.addEventListener('click', () => openDetail(id));
+      tile.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(id); }
+      });
+
+      portfolioGrid.appendChild(tile);
+    });
+  }
+
+  renderPortfolioGrid();
+
+  // ============ Detail overlay (read-only viewer) ============
+  const overlay = document.getElementById('detailOverlay');
+  const detailBack = document.getElementById('detailBack');
+  const detailThumb = document.getElementById('detailThumb');
+  const detailThumbHint = document.getElementById('detailThumbHint');
+  const detailTitle = document.getElementById('detailTitle');
+  const detailPeriod = document.getElementById('detailPeriod');
+  const toolChips = document.getElementById('toolChips');
+  const planningVal = document.getElementById('planningVal');
+  const designVal = document.getElementById('designVal');
+  const galleryGrid = document.getElementById('galleryGrid');
+
+  let currentId = null;
+
+  function openDetail(id) {
+    currentId = id;
+    const p = PROJECTS[id];
+
+    detailTitle.textContent = p.title || '프로젝트 제목을 입력하세요';
+    detailPeriod.textContent = p.period || '작업 기간 정보가 아직 없어요';
+
+    renderThumb();
+    renderTools();
+
+    planningVal.textContent = p.planning + '%';
+    designVal.textContent = p.design + '%';
+
+    renderGallery();
+
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    window.scrollTo(0,0);
+    overlay.scrollTop = 0;
+  }
+
+  function closeDetail() {
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    currentId = null;
+  }
+
+  detailBack.addEventListener('click', closeDetail);
+
+  function renderThumb() {
+    const p = PROJECTS[currentId];
+    let img = detailThumb.querySelector('img');
+    if (p.thumb) {
+      if (!img) { img = document.createElement('img'); detailThumb.insertBefore(img, detailThumb.firstChild); }
+      img.src = p.thumb;
+      detailThumb.classList.add('has-image');
+      detailThumbHint.style.display = 'none';
+    } else {
+      if (img) img.remove();
+      detailThumb.classList.remove('has-image');
+      detailThumbHint.style.display = 'block';
+    }
+  }
+
+  function renderTools() {
+    const p = PROJECTS[currentId];
+    toolChips.innerHTML = '';
+    p.tools.forEach(tid => {
+      const tool = getTool(tid);
+      if (!tool) return;
+      const chip = document.createElement('span');
+      chip.className = 'tool-chip';
+      chip.innerHTML = toolIconHtml(tool);
+      toolChips.appendChild(chip);
+    });
+  }
+
+  function renderGallery() {
+    const p = PROJECTS[currentId];
+    galleryGrid.innerHTML = '';
+    p.gallery.forEach(src => {
+      const item = document.createElement('div');
+      item.className = 'gallery-item';
+      const img = document.createElement('img');
+      img.src = src;
+      item.appendChild(img);
+      galleryGrid.appendChild(item);
+    });
+    if (!p.gallery.length) {
+      const empty = document.createElement('p');
+      empty.style.cssText = 'font-size:13px;color:var(--gray);';
+      empty.textContent = '아직 등록된 이미지가 없어요.';
+      galleryGrid.appendChild(empty);
+    }
+  }
+
+  // ============ Deep link: index.html preview tiles link here as work.html#<id> ============
+  if (location.hash) {
+    const linkedId = location.hash.slice(1);
+    if (PROJECTS[linkedId]) openDetail(linkedId);
+  }
+</script>
+
+</body>
+</html>
