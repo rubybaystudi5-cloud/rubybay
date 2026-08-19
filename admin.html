@@ -54,6 +54,45 @@
   button{font-family:inherit;}
   .hidden-input{display:none;}
 
+  /* ---------- Auth gate ---------- */
+  body:not(.authed) .admin-header,
+  body:not(.authed) .admin-main{ display:none; }
+  body.authed #loginGate{ display:none; }
+  #loginGate{
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;
+  }
+  .login-card{
+    width:100%;max-width:340px;
+    border:1px solid var(--line);border-radius:14px;
+    padding:36px 30px;background:#fff;
+  }
+  .login-card .logo{
+    font-family:'Nata Sans', sans-serif;
+    font-size:20px;font-weight:700;margin-bottom:6px;
+  }
+  .login-card .logo span{color:var(--ruby);}
+  .login-card p{font-size:13px;color:var(--gray);margin-bottom:24px;}
+  .login-card input[type=password]{
+    width:100%;border:1px solid var(--line);padding:12px 14px;
+    border-radius:8px;font-size:14px;font-family:inherit;color:var(--ink);
+    margin-bottom:14px;
+  }
+  .login-card input[type=password]:focus{outline:none;border-color:var(--ruby);}
+  .login-card button{
+    width:100%;background:var(--ruby);color:#fff;border:none;
+    padding:12px;border-radius:8px;font-size:14px;cursor:pointer;
+  }
+  .login-card button:hover{background:var(--ruby-dark);}
+  .login-card button:disabled{opacity:.6;cursor:default;}
+  .login-error{font-size:12px;color:var(--ruby);margin-top:10px;min-height:16px;}
+  .logout-btn{
+    font-size:12px;color:var(--gray);background:none;border:none;cursor:pointer;
+    margin-left:16px;
+  }
+  .logout-btn:hover{color:var(--ruby);}
+
   /* ---------- Header ---------- */
   .admin-header{
     display:flex;justify-content:space-between;align-items:center;
@@ -73,6 +112,7 @@
     border:1px solid var(--line);border-radius:999px;
     padding:3px 10px;
   }
+  .header-right{display:flex;align-items:center;}
   .view-site{font-size:13px;color:var(--ruby);}
   .view-site:hover{text-decoration:underline;}
 
@@ -112,6 +152,7 @@
     padding:10px 20px;border-radius:8px;font-size:13px;cursor:pointer;
   }
   .primary-btn:hover{background:var(--ruby-dark);}
+  .primary-btn:disabled{opacity:.6;cursor:default;}
   .secondary-btn{
     border:1px solid var(--line);background:none;
     padding:10px 16px;border-radius:8px;font-size:12px;color:var(--gray);cursor:pointer;
@@ -206,13 +247,29 @@
   .gallery-edit-add:hover{border-color:var(--ruby);color:var(--ruby);}
 
   .empty-state{font-size:13px;color:var(--gray);padding:24px 0;}
+  .save-status{font-size:11px;color:var(--gray);margin-left:10px;}
 </style>
 </head>
 <body>
 
+<div id="loginGate">
+  <div class="login-card">
+    <div class="logo">Ruby<span>bay</span> studio</div>
+    <p>관리자 페이지 — 비밀번호를 입력하세요.</p>
+    <form id="loginForm">
+      <input type="password" id="loginPassword" placeholder="비밀번호" autocomplete="current-password" required>
+      <button type="submit" id="loginSubmit">로그인</button>
+      <div class="login-error" id="loginError"></div>
+    </form>
+  </div>
+</div>
+
 <header class="admin-header">
   <div class="logo">Ruby<span>bay</span> studio <small>관리자 페이지</small></div>
-  <a class="view-site" href="work.html">사이트 보기 →</a>
+  <div class="header-right">
+    <a class="view-site" href="work.html">사이트 보기 →</a>
+    <button type="button" class="logout-btn" id="logoutBtn">로그아웃</button>
+  </div>
 </header>
 
 <main class="admin-main">
@@ -227,6 +284,7 @@
       <button type="button" id="newToolImageBtn" class="secondary-btn">이미지 선택</button>
       <input type="file" accept="image/*" class="hidden-input" id="newToolImageInput">
       <button type="button" id="addToolBtn" class="primary-btn">+ 도구 추가</button>
+      <span class="save-status" id="toolSaveStatus"></span>
     </div>
   </section>
 
@@ -252,30 +310,80 @@
     return String(str == null ? '' : str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
-  // ============ Tool library (shared with index.html) ============
-  const TOOLS_KEY = 'rubybay_tools';
-  function seedTools() {
-    return [
-      { id:'ps', name:'Photoshop', icon:{type:'emoji', value:'🖌️'} },
-      { id:'ai', name:'Illustrator', icon:{type:'emoji', value:'✒️'} },
-      { id:'figma', name:'Figma', icon:{type:'emoji', value:'🎨'} },
-      { id:'indesign', name:'InDesign', icon:{type:'emoji', value:'📄'} },
-      { id:'ppt', name:'PowerPoint', icon:{type:'emoji', value:'📊'} },
-      { id:'keynote', name:'Keynote', icon:{type:'emoji', value:'🎞️'} },
-      { id:'procreate', name:'Procreate', icon:{type:'emoji', value:'🖍️'} },
-      { id:'premiere', name:'Premiere Pro', icon:{type:'emoji', value:'🎬'} },
-    ];
+  async function api(path, options) {
+    const res = await fetch(path, {
+      credentials: 'same-origin',
+      ...options,
+      headers: { 'content-type': 'application/json', ...(options && options.headers) },
+    });
+    if (res.status === 401) {
+      document.body.classList.remove('authed');
+      throw new Error('unauthorized');
+    }
+    if (!res.ok) throw new Error('request_failed:' + res.status);
+    if (res.status === 204) return null;
+    return res.json();
   }
-  function loadTools() {
+
+  async function uploadFile(file) {
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch('/api/upload', { method: 'POST', credentials: 'same-origin', body: form });
+    if (res.status === 401) {
+      document.body.classList.remove('authed');
+      throw new Error('unauthorized');
+    }
+    if (!res.ok) throw new Error('upload_failed:' + res.status);
+    const data = await res.json();
+    return data.url;
+  }
+
+  // ============ Auth gate ============
+  const loginForm = document.getElementById('loginForm');
+  const loginPassword = document.getElementById('loginPassword');
+  const loginError = document.getElementById('loginError');
+  const loginSubmit = document.getElementById('loginSubmit');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    loginError.textContent = '';
+    loginSubmit.disabled = true;
+    loginSubmit.textContent = '확인 중...';
     try {
-      const raw = localStorage.getItem(TOOLS_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) { /* ignore corrupt data */ }
-    const seeded = seedTools();
-    localStorage.setItem(TOOLS_KEY, JSON.stringify(seeded));
-    return seeded;
-  }
-  function saveTools() { localStorage.setItem(TOOLS_KEY, JSON.stringify(TOOLS)); }
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ password: loginPassword.value }),
+      });
+      if (!res.ok) {
+        loginError.textContent = '비밀번호가 올바르지 않아요.';
+        return;
+      }
+      document.body.classList.add('authed');
+      loginPassword.value = '';
+      await init();
+    } catch (err) {
+      loginError.textContent = '연결에 실패했어요. 잠시 후 다시 시도해주세요.';
+    } finally {
+      loginSubmit.disabled = false;
+      loginSubmit.textContent = '로그인';
+    }
+  });
+
+  logoutBtn.addEventListener('click', async () => {
+    await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
+    document.body.classList.remove('authed');
+  });
+
+  // ============ Data (loaded from the API on init) ============
+  let TOOLS = [];
+  let ORDER = [];
+  const PROJECTS = {};
+  const openIds = new Set();
+  const saveTimers = {};
+
   function getTool(id) { return TOOLS.find(t => t.id === id); }
   function toolIconHtml(tool) {
     if (!tool) return '';
@@ -284,95 +392,63 @@
     }
     return `<span class="chip-emoji">${(tool.icon && tool.icon.value) || '🔧'}</span>`;
   }
-  let TOOLS = loadTools();
 
-  // ============ Project order (shared with index.html / work.html) ============
-  const ORDER_KEY = 'rubybay_project_order';
-  function seedOrder() { return ['p1','p2','p3','p4','p5','p6']; }
-  function loadOrder() {
+  async function loadData() {
+    const [projects, tools] = await Promise.all([
+      api('/api/projects'),
+      api('/api/tools'),
+    ]);
+    TOOLS = tools;
+    ORDER = projects.map(p => p.id);
+    Object.keys(PROJECTS).forEach(k => delete PROJECTS[k]);
+    projects.forEach(p => { PROJECTS[p.id] = p; });
+  }
+
+  function scheduleSave(pid) {
+    clearTimeout(saveTimers[pid]);
+    saveTimers[pid] = setTimeout(() => saveProject(pid), 600);
+  }
+
+  async function saveProject(id) {
     try {
-      const raw = localStorage.getItem(ORDER_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) { /* ignore corrupt data */ }
-    const seeded = seedOrder();
-    localStorage.setItem(ORDER_KEY, JSON.stringify(seeded));
-    return seeded;
-  }
-  function saveOrder() { localStorage.setItem(ORDER_KEY, JSON.stringify(ORDER)); }
-  let ORDER = loadOrder();
-
-  // ============ Project data (defaults for the original 6, blank template for new ones) ============
-  function defaultProject() {
-    return { catLabel:'', desc:'', title:'프로젝트 제목을 입력하세요', period:'', tools:[], planning:0, design:0, cost:'', thumb:null, gallery:[] };
-  }
-  const PROJECT_DEFAULTS = {
-    p1: { catLabel:'브랜드 디자인', desc:'브랜드 아이덴티티 · 로고 · 가이드라인', tools:['ai','ps','figma','indesign'], planning:40, design:60 },
-    p2: { catLabel:'상세페이지', desc:'제품 상세페이지 · 스토리보드', tools:['ps','ai','figma','ppt'], planning:30, design:70 },
-    p3: { catLabel:'PPT 디자인', desc:'제안서 · IR덱 · 사내 보고서', tools:['ppt','keynote','ai','ps'], planning:50, design:50 },
-    p4: { catLabel:'패키지 디자인', desc:'제품 패키지 · 라벨 · 굿즈', tools:['ai','ps','procreate','indesign'], planning:35, design:65 },
-    p5: { catLabel:'마케팅 디자인', desc:'SNS 콘텐츠 · 배너 · 캠페인 비주얼', tools:['ps','ai','figma','premiere'], planning:45, design:55 },
-    p6: { catLabel:'브랜드 디자인', desc:'브랜드 아이덴티티 · 로고 · 가이드라인', tools:['ai','ps','figma','indesign'], planning:40, design:60 },
-  };
-  const STORAGE_PREFIX = 'rubybay_project_';
-
-  function getProject(id) {
-    const base = Object.assign(defaultProject(), PROJECT_DEFAULTS[id] || {});
-    try {
-      const raw = localStorage.getItem(STORAGE_PREFIX + id);
-      if (raw) Object.assign(base, JSON.parse(raw));
-    } catch (e) { /* ignore corrupt data */ }
-    return base;
+      await api(`/api/projects/${id}`, { method: 'PUT', body: JSON.stringify(PROJECTS[id]) });
+    } catch (err) { /* best-effort; UI already reflects the change locally */ }
   }
 
-  const PROJECTS = {};
-  ORDER.forEach(id => { PROJECTS[id] = getProject(id); });
-
-  function saveProject(id) {
-    localStorage.setItem(STORAGE_PREFIX + id, JSON.stringify(PROJECTS[id]));
-  }
-
-  function createProject() {
-    const id = 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
-    PROJECTS[id] = defaultProject();
-    ORDER.push(id);
-    saveOrder();
-    saveProject(id);
-    openIds.add(id);
+  async function createProject() {
+    const created = await api('/api/projects', { method: 'POST', body: JSON.stringify({}) });
+    PROJECTS[created.id] = created;
+    ORDER.push(created.id);
+    openIds.add(created.id);
     renderProjectList();
-    const card = projectList.querySelector(`.project-card[data-pid="${id}"]`);
+    const card = projectList.querySelector(`.project-card[data-pid="${created.id}"]`);
     if (card && typeof card.scrollIntoView === 'function') card.scrollIntoView({ behavior:'smooth', block:'center' });
   }
 
-  function deleteProject(id) {
+  async function deleteProject(id) {
     if (!confirm('이 프로젝트를 삭제할까요? 되돌릴 수 없어요.')) return;
+    await api(`/api/projects/${id}`, { method: 'DELETE' });
     ORDER = ORDER.filter(pid => pid !== id);
-    saveOrder();
     delete PROJECTS[id];
-    localStorage.removeItem(STORAGE_PREFIX + id);
     openIds.delete(id);
     renderProjectList();
   }
-
-  const openIds = new Set();
 
   // ============ Tool library UI ============
   const toolLibGrid = document.getElementById('toolLibGrid');
   const newToolImageBtn = document.getElementById('newToolImageBtn');
   const newToolImageInput = document.getElementById('newToolImageInput');
   const addToolBtn = document.getElementById('addToolBtn');
+  const toolSaveStatus = document.getElementById('toolSaveStatus');
 
-  let pendingToolImage = null;
+  let pendingToolFile = null;
 
   newToolImageBtn.addEventListener('click', () => newToolImageInput.click());
   newToolImageInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      pendingToolImage = reader.result;
-      newToolImageBtn.textContent = '이미지 선택됨 ✓';
-    };
-    reader.readAsDataURL(file);
+    pendingToolFile = file;
+    newToolImageBtn.textContent = '이미지 선택됨 ✓';
   });
 
   function renderToolLib() {
@@ -384,36 +460,41 @@
     `).join('') || '<p class="empty-state">등록된 도구가 없어요. 아래에서 추가해보세요.</p>';
   }
 
-  toolLibGrid.addEventListener('click', (e) => {
+  toolLibGrid.addEventListener('click', async (e) => {
     const btn = e.target.closest('button[data-del]');
     if (!btn) return;
     const tid = btn.dataset.del;
     if (!confirm('이 도구를 삭제하면 사용 중인 모든 프로젝트에서도 함께 제거돼요. 삭제할까요?')) return;
+    await api(`/api/tools/${tid}`, { method: 'DELETE' });
     TOOLS = TOOLS.filter(t => t.id !== tid);
-    saveTools();
-    Object.keys(PROJECTS).forEach(pid => {
-      if (PROJECTS[pid].tools.includes(tid)) {
-        PROJECTS[pid].tools = PROJECTS[pid].tools.filter(t => t !== tid);
-        saveProject(pid);
-      }
-    });
+    const affected = Object.keys(PROJECTS).filter(pid => PROJECTS[pid].tools.includes(tid));
+    affected.forEach(pid => { PROJECTS[pid].tools = PROJECTS[pid].tools.filter(t => t !== tid); });
+    await Promise.all(affected.map(pid => saveProject(pid)));
     renderToolLib();
     renderProjectList();
   });
 
-  addToolBtn.addEventListener('click', () => {
-    if (!pendingToolImage) { alert('아이콘 이미지를 먼저 선택해주세요.'); return; }
-    const icon = { type:'image', value: pendingToolImage };
-    const id = 't_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-    TOOLS.push({ id, name:'', icon });
-    saveTools();
+  addToolBtn.addEventListener('click', async () => {
+    if (!pendingToolFile) { alert('아이콘 이미지를 먼저 선택해주세요.'); return; }
+    addToolBtn.disabled = true;
+    toolSaveStatus.textContent = '업로드 중...';
+    try {
+      const url = await uploadFile(pendingToolFile);
+      const created = await api('/api/tools', { method: 'POST', body: JSON.stringify({ value: url }) });
+      TOOLS.push(created);
 
-    pendingToolImage = null;
-    newToolImageBtn.textContent = '이미지 선택';
-    newToolImageInput.value = '';
+      pendingToolFile = null;
+      newToolImageBtn.textContent = '이미지 선택';
+      newToolImageInput.value = '';
+      toolSaveStatus.textContent = '';
 
-    renderToolLib();
-    renderProjectList();
+      renderToolLib();
+      renderProjectList();
+    } catch (err) {
+      toolSaveStatus.textContent = '업로드 실패';
+    } finally {
+      addToolBtn.disabled = false;
+    }
   });
 
   // ============ Project list UI ============
@@ -477,6 +558,10 @@
             <div class="form-row">
               <label>프로젝트 이름</label>
               <input type="text" class="title-input" data-pid="${pid}" value="${escapeHtml(p.title)}">
+            </div>
+            <div class="form-row">
+              <label>설명</label>
+              <input type="text" class="desc-input" data-pid="${pid}" value="${escapeHtml(p.desc)}" placeholder="예: 브랜드 아이덴티티 · 로고 · 가이드라인">
             </div>
             <div class="form-row">
               <label>작업 기간</label>
@@ -587,77 +672,94 @@
 
     if (e.target.classList.contains('cat-input-field')) {
       PROJECTS[pid].catLabel = e.target.value;
-      saveProject(pid);
+      scheduleSave(pid);
       const head = projectList.querySelector(`.project-card[data-pid="${pid}"] .ph-cat`);
       if (head) head.textContent = e.target.value || '(분류 없음)';
     }
     if (e.target.classList.contains('title-input')) {
       PROJECTS[pid].title = e.target.value;
-      saveProject(pid);
+      scheduleSave(pid);
       const headTitle = document.getElementById(`ph-title-${pid}`);
       if (headTitle) headTitle.textContent = e.target.value || '(제목 없음)';
     }
+    if (e.target.classList.contains('desc-input')) {
+      PROJECTS[pid].desc = e.target.value;
+      scheduleSave(pid);
+    }
     if (e.target.classList.contains('period-input')) {
       PROJECTS[pid].period = e.target.value;
-      saveProject(pid);
+      scheduleSave(pid);
     }
     if (e.target.classList.contains('cost-input')) {
       PROJECTS[pid].cost = e.target.value;
-      saveProject(pid);
+      scheduleSave(pid);
     }
     if (e.target.classList.contains('planning-range')) {
       PROJECTS[pid].planning = Number(e.target.value);
       const live = document.getElementById(`planning-live-${pid}`);
       if (live) live.textContent = e.target.value + '%';
-      saveProject(pid);
+      scheduleSave(pid);
     }
     if (e.target.classList.contains('design-range')) {
       PROJECTS[pid].design = Number(e.target.value);
       const live = document.getElementById(`design-live-${pid}`);
       if (live) live.textContent = e.target.value + '%';
-      saveProject(pid);
+      scheduleSave(pid);
     }
   });
 
-  thumbFileInput.addEventListener('change', (e) => {
+  thumbFileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file || !pendingThumbPid) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      PROJECTS[pendingThumbPid].thumb = reader.result;
-      saveProject(pendingThumbPid);
+    const pid = pendingThumbPid;
+    try {
+      const url = await uploadFile(file);
+      PROJECTS[pid].thumb = url;
+      await saveProject(pid);
       renderProjectList();
-    };
-    reader.readAsDataURL(file);
+      const card = projectList.querySelector(`.project-card[data-pid="${pid}"]`);
+      if (card) card.classList.add('open');
+      openIds.add(pid);
+    } catch (err) {
+      alert('이미지 업로드에 실패했어요. 다시 시도해주세요.');
+    }
     thumbFileInput.value = '';
   });
 
-  galleryFileInput.addEventListener('change', (e) => {
+  galleryFileInput.addEventListener('change', async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length || !pendingGalleryPid) return;
     const pid = pendingGalleryPid;
-    let remaining = files.length;
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        PROJECTS[pid].gallery.push(reader.result);
-        remaining -= 1;
-        if (remaining === 0) {
-          saveProject(pid);
-          renderProjectList();
-          openIds.add(pid);
-          const card = projectList.querySelector(`.project-card[data-pid="${pid}"]`);
-          if (card) card.classList.add('open');
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    try {
+      const urls = await Promise.all(files.map(uploadFile));
+      PROJECTS[pid].gallery.push(...urls);
+      await saveProject(pid);
+      renderProjectList();
+      openIds.add(pid);
+      const card = projectList.querySelector(`.project-card[data-pid="${pid}"]`);
+      if (card) card.classList.add('open');
+    } catch (err) {
+      alert('이미지 업로드에 실패했어요. 다시 시도해주세요.');
+    }
     galleryFileInput.value = '';
   });
 
   // ============ init ============
-  renderToolLib();
-  renderProjectList();
+  async function init() {
+    await loadData();
+    renderToolLib();
+    renderProjectList();
+  }
+
+  (async () => {
+    try {
+      const session = await fetch('/api/session', { credentials: 'same-origin' }).then(r => r.json());
+      if (session.authenticated) {
+        document.body.classList.add('authed');
+        await init();
+      }
+    } catch (err) { /* show login gate on any failure */ }
+  })();
 </script>
 
 </body>

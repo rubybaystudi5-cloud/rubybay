@@ -113,6 +113,8 @@
     nav ul li a{display:block;padding:18px 6vw;}
     nav ul li a .txt-ko{left:6vw;top:18px;transform:none;}
     .nav-toggle{display:block;}
+    header{gap:20px;padding:20px 6vw;}
+    .logo{white-space:nowrap;font-size:17px;}
   }
 
   /* ---------- Hero ---------- */
@@ -472,19 +474,9 @@
   }, {threshold:0.15});
   document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 
-  // ============ Portfolio preview (first 6 — shared data, full list on work.html) ============
-  const ORDER_KEY = 'rubybay_project_order';
+  // ============ Portfolio preview (first 6 — API-backed, full list on work.html) ============
   function seedOrder() { return ['p1','p2','p3','p4','p5','p6']; }
-  function loadOrder() {
-    try {
-      const raw = localStorage.getItem(ORDER_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) { /* ignore corrupt data */ }
-    const seeded = seedOrder();
-    localStorage.setItem(ORDER_KEY, JSON.stringify(seeded));
-    return seeded;
-  }
-  const ORDER = loadOrder();
+  let ORDER = [];
 
   function defaultProject() {
     return { catLabel:'', desc:'', title:'프로젝트 제목을 입력하세요', period:'', tools:[], planning:0, design:0, cost:'', thumb:null, gallery:[] };
@@ -497,15 +489,25 @@
     p5: { catLabel:'마케팅 디자인', desc:'SNS 콘텐츠 · 배너 · 캠페인 비주얼' },
     p6: { catLabel:'브랜드 디자인', desc:'브랜드 아이덴티티 · 로고 · 가이드라인' },
   };
-  const STORAGE_PREFIX = 'rubybay_project_';
 
-  function getProject(id) {
-    const base = Object.assign(defaultProject(), PROJECT_DEFAULTS[id] || {});
+  function fallbackProject(id) {
+    return Object.assign(defaultProject(), PROJECT_DEFAULTS[id] || {});
+  }
+
+  const PROJECTS = {};
+
+  // Tries the live API first (real data managed in admin.html); falls back
+  // to the hardcoded defaults above if the backend isn't reachable yet.
+  async function loadData() {
     try {
-      const raw = localStorage.getItem(STORAGE_PREFIX + id);
-      if (raw) Object.assign(base, JSON.parse(raw));
-    } catch (e) { /* ignore corrupt data */ }
-    return base;
+      const projects = await fetch('/api/projects').then(r => { if (!r.ok) throw new Error('bad_response'); return r.json(); });
+      if (!Array.isArray(projects) || !projects.length) throw new Error('empty');
+      ORDER = projects.map(p => p.id);
+      projects.forEach(p => { PROJECTS[p.id] = p; });
+    } catch (e) {
+      ORDER = seedOrder();
+      ORDER.forEach(id => { PROJECTS[id] = fallbackProject(id); });
+    }
   }
 
   const CATEGORY_EN = {
@@ -522,7 +524,7 @@
   function renderPortfolioPreview() {
     portfolioGrid.innerHTML = '';
     ORDER.slice(0, 6).forEach(id => {
-      const p = getProject(id);
+      const p = PROJECTS[id];
       const tile = document.createElement('a');
       tile.className = 'portfolio-tile' + (p.thumb ? ' has-image' : '');
       tile.dataset.cat = categoryEn(p.catLabel);
@@ -548,7 +550,10 @@
     });
   }
 
-  renderPortfolioPreview();
+  (async () => {
+    await loadData();
+    renderPortfolioPreview();
+  })();
 </script>
 
 </body>
