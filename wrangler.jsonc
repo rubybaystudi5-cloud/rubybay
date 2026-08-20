@@ -1,0 +1,34 @@
+{
+  "name": "rubybay",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-15",
+  "assets": {
+    "directory": "./",
+    "binding": "ASSETS",
+    "exclude": [
+      "functions/**",
+      "src/**",
+      "*.sql",
+      "*.md",
+      "wrangler.jsonc",
+      "package.json",
+      "package-lock.json",
+      "node_modules/**",
+      ".git/**",
+      ".wrangler/**"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "rubybay-db",
+      "database_id": "86cd9088-12c1-484d-a754-5764de6a6a64"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "IMAGES",
+      "bucket_name": "rubybay-images"
+    }
+  ]
+}
