@@ -123,23 +123,15 @@
     align-items:center;
     justify-content:center;
     text-align:center;
-    padding:267px 6vw 160px;
+    padding:520px 6vw 160px;
     position:relative;
     overflow:hidden;
   }
-  /* Background layer — image OR video both work here.
-     Image: add a style attribute on .hero-bg like
-       style="background-image:url('images/hero.jpg')"
-     Video: uncomment the <video class="hero-bg-video"> tag in the HTML
-       below and point its <source> at your video file. When a video is
-       present it sits on top of .hero-bg and covers it automatically.
-     The veil (.hero-veil) keeps the text readable over either one —
-     lower its opacity if you want the photo/video to show through more. */
   .hero-media{position:absolute;inset:0;z-index:0;overflow:hidden;}
   .hero-bg{
     position:absolute;
     inset:0;
-    background:#0c0c0c;
+    background:var(--bg);
     background-size:cover;
     background-position:center;
   }
@@ -149,11 +141,6 @@
     width:100%;
     height:100%;
     object-fit:cover;
-  }
-  .hero-veil{
-    position:absolute;
-    inset:0;
-    background:rgba(12,12,12,0.55);
   }
   .hero-content{
     position:relative;
@@ -298,7 +285,6 @@
     padding:60px 6vw;
   }
   .site-footer-inner{
-    max-width:1280px;margin:0 auto;
     display:flex;justify-content:space-between;gap:60px;
     flex-wrap:wrap;
   }
@@ -359,9 +345,8 @@
   <div class="hero-media">
     <div class="hero-bg"></div>
     <video class="hero-bg-video" autoplay muted loop playsinline>
-      <source src="images/ruby.mp4" type="video/mp4">
+      <source src="images/hero-video.mp4" type="video/mp4">
     </video>
-    <div class="hero-veil"></div>
   </div>
   <div class="hero-content"></div>
 </section>
