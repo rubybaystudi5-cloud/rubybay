@@ -189,7 +189,6 @@
   }
   .card-drag-handle:active{cursor:grabbing;}
   .project-card.dragging{opacity:.4;}
-  .project-card.drag-over{border-color:var(--ruby);}
   .card-delete-btn{
     flex:0 0 auto;border:1px solid var(--line);background:none;
     color:var(--gray);font-size:12px;padding:6px 12px;border-radius:999px;cursor:pointer;
@@ -240,8 +239,10 @@
   .involve-edit-row input[type=range]{width:100%;accent-color:var(--ruby);}
 
   .gallery-edit-list{display:flex;flex-direction:column;gap:16px;margin-top:6px;}
-  .gallery-edit-item{position:relative;line-height:0;}
-  .gallery-edit-item img{width:100%;border-radius:8px;border:1px solid var(--line);display:block;}
+  .gallery-edit-item{position:relative;line-height:0;cursor:grab;}
+  .gallery-edit-item:active{cursor:grabbing;}
+  .gallery-edit-item.dragging{opacity:.4;}
+  .gallery-edit-item img{width:100%;border-radius:8px;border:1px solid var(--line);display:block;pointer-events:none;}
   .gallery-edit-item button{
     position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;
     background:rgba(26,26,26,.6);color:#fff;border:none;cursor:pointer;font-size:15px;
@@ -529,7 +530,7 @@
   function galleryEditHtml(pid) {
     const p = PROJECTS[pid];
     const items = p.gallery.map((src, idx) => `
-      <div class="gallery-edit-item">
+      <div class="gallery-edit-item" data-pid="${pid}" data-idx="${idx}">
         <img src="${src}" alt="">
         <button type="button" data-pid="${pid}" data-idx="${idx}">&times;</button>
       </div>
@@ -545,7 +546,7 @@
     const thumbHtml = p.thumb ? `<img src="${p.thumb}" alt="">` : '🖼';
     const thumbUploadHtml = p.thumb ? `<img src="${p.thumb}" alt="">` : '클릭해서<br>대표 이미지 업로드';
     return `
-    <div class="project-card" data-pid="${pid}" draggable="true">
+    <div class="project-card" data-pid="${pid}">
       <div class="project-card-head" data-pid="${pid}">
         <div class="card-drag-handle" title="드래그해서 순서 변경">⠿</div>
         <div class="ph-thumb">${thumbHtml}</div>
@@ -650,53 +651,104 @@
     }
   }
 
-  // ---- drag-to-reorder ----
-  let draggedPid = null;
+  // ---- drag-to-reorder (pointer-based; native HTML5 DnD was unreliable across browsers) ----
+  let dragPid = null;
 
-  projectList.addEventListener('dragstart', (e) => {
-    const card = e.target.closest('.project-card');
-    const onHandle = e.target.closest('.card-drag-handle');
-    if (!card || !onHandle) { e.preventDefault(); return; }
-    draggedPid = card.dataset.pid;
-    e.dataTransfer.effectAllowed = 'move';
-    try { e.dataTransfer.setData('text/plain', draggedPid); } catch (err) {}
-    card.classList.add('dragging');
-  });
+  function reapplyDraggingClass() {
+    if (!dragPid) return;
+    const el = projectList.querySelector(`.project-card[data-pid="${dragPid}"]`);
+    if (el) el.classList.add('dragging');
+  }
 
-  projectList.addEventListener('dragover', (e) => {
-    if (!draggedPid) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    const card = e.target.closest('.project-card');
-    if (card && card.dataset.pid !== draggedPid) card.classList.add('drag-over');
-  });
-
-  projectList.addEventListener('dragleave', (e) => {
-    const card = e.target.closest('.project-card');
-    if (card) card.classList.remove('drag-over');
-  });
-
-  projectList.addEventListener('drop', (e) => {
-    e.preventDefault();
-    const card = e.target.closest('.project-card');
-    if (card) card.classList.remove('drag-over');
-    if (!draggedPid || !card) return;
-    const targetPid = card.dataset.pid;
-    if (targetPid === draggedPid) return;
-    const fromIdx = ORDER.indexOf(draggedPid);
-    const toIdx = ORDER.indexOf(targetPid);
-    if (fromIdx === -1 || toIdx === -1) return;
+  function onDragPointerMove(e) {
+    if (!dragPid) return;
+    const target = document.elementFromPoint(e.clientX, e.clientY);
+    if (!target) return;
+    const hoveredCard = target.closest('.project-card');
+    if (!hoveredCard) return;
+    const hoveredPid = hoveredCard.dataset.pid;
+    if (!hoveredPid || hoveredPid === dragPid) return;
+    const fromIdx = ORDER.indexOf(dragPid);
+    const toIdx = ORDER.indexOf(hoveredPid);
+    if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return;
     ORDER.splice(fromIdx, 1);
-    ORDER.splice(toIdx, 0, draggedPid);
+    ORDER.splice(toIdx, 0, dragPid);
     renderProjectList();
+    reapplyDraggingClass();
+  }
+
+  function onDragPointerUp() {
+    if (!dragPid) return;
+    dragPid = null;
+    document.body.style.userSelect = '';
+    document.removeEventListener('mousemove', onDragPointerMove);
+    document.removeEventListener('mouseup', onDragPointerUp);
+    projectList.querySelectorAll('.project-card.dragging').forEach(el => el.classList.remove('dragging'));
     saveOrder();
+  }
+
+  projectList.addEventListener('mousedown', (e) => {
+    const galItem = e.target.closest('.gallery-edit-item');
+    if (galItem && !e.target.closest('button')) {
+      e.preventDefault();
+      galDragPid = galItem.dataset.pid;
+      galDragIdx = Number(galItem.dataset.idx);
+      document.body.style.userSelect = 'none';
+      galItem.classList.add('dragging');
+      document.addEventListener('mousemove', onGalPointerMove);
+      document.addEventListener('mouseup', onGalPointerUp);
+      return;
+    }
+
+    const handle = e.target.closest('.card-drag-handle');
+    if (!handle) return;
+    const card = handle.closest('.project-card');
+    if (!card) return;
+    e.preventDefault();
+    dragPid = card.dataset.pid;
+    document.body.style.userSelect = 'none';
+    card.classList.add('dragging');
+    document.addEventListener('mousemove', onDragPointerMove);
+    document.addEventListener('mouseup', onDragPointerUp);
   });
 
-  projectList.addEventListener('dragend', (e) => {
-    draggedPid = null;
-    projectList.querySelectorAll('.project-card.dragging').forEach(el => el.classList.remove('dragging'));
-    projectList.querySelectorAll('.project-card.drag-over').forEach(el => el.classList.remove('drag-over'));
-  });
+  // ---- gallery image drag-to-reorder ----
+  let galDragPid = null;
+  let galDragIdx = null;
+
+  function reapplyGalDraggingClass() {
+    if (galDragPid === null || galDragIdx === null) return;
+    const el = projectList.querySelector(`.gallery-edit-item[data-pid="${galDragPid}"][data-idx="${galDragIdx}"]`);
+    if (el) el.classList.add('dragging');
+  }
+
+  function onGalPointerMove(e) {
+    if (galDragPid === null) return;
+    const target = document.elementFromPoint(e.clientX, e.clientY);
+    if (!target) return;
+    const hoveredItem = target.closest('.gallery-edit-item');
+    if (!hoveredItem || hoveredItem.dataset.pid !== galDragPid) return;
+    const hoveredIdx = Number(hoveredItem.dataset.idx);
+    if (hoveredIdx === galDragIdx) return;
+    const arr = PROJECTS[galDragPid].gallery;
+    const [moved] = arr.splice(galDragIdx, 1);
+    arr.splice(hoveredIdx, 0, moved);
+    galDragIdx = hoveredIdx;
+    renderProjectList();
+    reapplyGalDraggingClass();
+  }
+
+  function onGalPointerUp() {
+    if (galDragPid === null) return;
+    const pid = galDragPid;
+    galDragPid = null;
+    galDragIdx = null;
+    document.body.style.userSelect = '';
+    document.removeEventListener('mousemove', onGalPointerMove);
+    document.removeEventListener('mouseup', onGalPointerUp);
+    projectList.querySelectorAll('.gallery-edit-item.dragging').forEach(el => el.classList.remove('dragging'));
+    saveProject(pid);
+  }
 
   projectList.addEventListener('click', (e) => {
     const delBtn = e.target.closest('.card-delete-btn');
