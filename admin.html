@@ -182,6 +182,17 @@
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .chevron{color:var(--gray);font-size:12px;transition:transform .2s;flex:0 0 auto;}
   .project-card.open .chevron{transform:rotate(180deg);}
+  .card-reorder{
+    flex:0 0 auto;display:flex;flex-direction:column;gap:2px;
+  }
+  .card-reorder button{
+    border:1px solid var(--line);background:#fff;
+    color:var(--gray);width:24px;height:20px;
+    border-radius:5px;cursor:pointer;font-size:11px;
+    display:flex;align-items:center;justify-content:center;line-height:1;
+  }
+  .card-reorder button:hover:not(:disabled){border-color:var(--ruby);color:var(--ruby);}
+  .card-reorder button:disabled{opacity:.3;cursor:default;}
   .card-delete-btn{
     flex:0 0 auto;border:1px solid var(--line);background:none;
     color:var(--gray);font-size:12px;padding:6px 12px;border-radius:999px;cursor:pointer;
@@ -536,6 +547,9 @@
     const p = PROJECTS[pid];
     const thumbHtml = p.thumb ? `<img src="${p.thumb}" alt="">` : '🖼';
     const thumbUploadHtml = p.thumb ? `<img src="${p.thumb}" alt="">` : '클릭해서<br>대표 이미지 업로드';
+    const idx = ORDER.indexOf(pid);
+    const isFirst = idx <= 0;
+    const isLast = idx === -1 || idx >= ORDER.length - 1;
     return `
     <div class="project-card" data-pid="${pid}">
       <div class="project-card-head" data-pid="${pid}">
@@ -543,6 +557,10 @@
         <div class="ph-info">
           <div class="ph-cat">${escapeHtml(p.catLabel) || '(분류 없음)'}</div>
           <div class="ph-title" id="ph-title-${pid}">${escapeHtml(p.title) || '(제목 없음)'}</div>
+        </div>
+        <div class="card-reorder">
+          <button type="button" data-move-up="${pid}" title="위로" ${isFirst ? 'disabled' : ''}>▲</button>
+          <button type="button" data-move-down="${pid}" title="아래로" ${isLast ? 'disabled' : ''}>▼</button>
         </div>
         <button type="button" class="card-delete-btn" data-del-pid="${pid}">삭제</button>
         <div class="chevron">▾</div>
@@ -633,9 +651,32 @@
     renderProjectList();
   }
 
+  function moveProject(pid, direction) {
+    const idx = ORDER.indexOf(pid);
+    const swapIdx = idx + direction;
+    if (idx === -1 || swapIdx < 0 || swapIdx >= ORDER.length) return;
+    [ORDER[idx], ORDER[swapIdx]] = [ORDER[swapIdx], ORDER[idx]];
+    renderProjectList();
+    saveOrder();
+  }
+
+  async function saveOrder() {
+    try {
+      await api('/api/projects/reorder', { method: 'POST', body: JSON.stringify({ order: ORDER }) });
+    } catch (err) {
+      // ignore; next successful save will reconcile
+    }
+  }
+
   projectList.addEventListener('click', (e) => {
     const delBtn = e.target.closest('.card-delete-btn');
     if (delBtn) { deleteProject(delBtn.dataset.delPid); return; }
+
+    const upBtn = e.target.closest('[data-move-up]');
+    if (upBtn) { moveProject(upBtn.dataset.moveUp, -1); return; }
+
+    const downBtn = e.target.closest('[data-move-down]');
+    if (downBtn) { moveProject(downBtn.dataset.moveDown, 1); return; }
 
     const head = e.target.closest('.project-card-head');
     if (head) {
