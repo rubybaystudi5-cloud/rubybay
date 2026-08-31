@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>작업물 | 루비베이스튜디오</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
+<link rel="icon" href="favicon.ico">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -300,6 +303,11 @@
   .involve-inline b{font-family:'SUIT', sans-serif;color:var(--ruby);font-weight:700;margin-left:5px;}
   .involve-inline .divider{color:rgba(255,255,255,0.3);}
 
+  .detail-desc{
+    font-size:15px;line-height:1.9;color:rgba(255,255,255,0.75);
+    white-space:pre-wrap;letter-spacing:-0.02em;
+  }
+
   .detail-gallery-head{
     display:flex;justify-content:space-between;align-items:flex-end;
     margin-bottom:32px;border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:20px;
@@ -313,8 +321,9 @@
   }
   .gallery-item{
     position:relative;width:100%;
-    border:1px solid rgba(255,255,255,0.15);overflow:hidden;background:#1a1a1a;
+    overflow:hidden;background:#1a1a1a;
     line-height:0;
+    display:block;
   }
   .gallery-item img{width:100%;height:auto;display:block;}
 
@@ -397,10 +406,6 @@
   <div class="detail-back" id="detailBack">&lt; work</div>
   <div class="detail-wrap">
     <div class="detail-top">
-      <div class="detail-thumb" id="detailThumb">
-        <div class="upload-hint" id="detailThumbHint"><span>—</span>준비 중인 이미지예요</div>
-      </div>
-
       <div class="detail-info">
         <h2 class="detail-title" id="detailTitle"></h2>
 
@@ -423,12 +428,12 @@
           </div>
         </div>
       </div>
+
+      <div class="detail-desc" id="detailDesc"></div>
     </div>
 
     <div class="detail-gallery">
-      <div class="detail-gallery-head">
-        <h3>작업 이미지</h3>
-      </div>
+      <div class="detail-gallery-head"></div>
       <div class="gallery-grid" id="galleryGrid"></div>
     </div>
   </div>
@@ -502,7 +507,7 @@
 
   // ============ Project data (defaults for the original 6, blank template for new ones) ============
   function defaultProject() {
-    return { catLabel:'', desc:'', title:'프로젝트 제목을 입력하세요', period:'', tools:[], planning:0, design:0, cost:'', thumb:null, gallery:[] };
+    return { catLabel:'', desc:'', title:'프로젝트 제목을 입력하세요', period:'', tools:[], planning:0, design:0, cost:'', productDesc:'', thumb:null, gallery:[] };
   }
   const PROJECT_DEFAULTS = {
     p1: { catLabel:'브랜드 디자인', desc:'브랜드 아이덴티티 · 로고 · 가이드라인', tools:['ai','ps','figma','indesign'], planning:40, design:60 },
@@ -590,8 +595,7 @@
   // ============ Detail overlay (read-only viewer) ============
   const overlay = document.getElementById('detailOverlay');
   const detailBack = document.getElementById('detailBack');
-  const detailThumb = document.getElementById('detailThumb');
-  const detailThumbHint = document.getElementById('detailThumbHint');
+  const detailDesc = document.getElementById('detailDesc');
   const detailTitle = document.getElementById('detailTitle');
   const detailPeriod = document.getElementById('detailPeriod');
   const toolChips = document.getElementById('toolChips');
@@ -607,8 +611,8 @@
 
     detailTitle.textContent = p.title || '프로젝트 제목을 입력하세요';
     detailPeriod.textContent = p.period || '작업 기간 정보가 아직 없어요';
+    detailDesc.textContent = p.productDesc || '';
 
-    renderThumb();
     renderTools();
 
     planningVal.textContent = p.planning + '%';
@@ -629,21 +633,6 @@
   }
 
   detailBack.addEventListener('click', closeDetail);
-
-  function renderThumb() {
-    const p = PROJECTS[currentId];
-    let img = detailThumb.querySelector('img');
-    if (p.thumb) {
-      if (!img) { img = document.createElement('img'); detailThumb.insertBefore(img, detailThumb.firstChild); }
-      img.src = p.thumb;
-      detailThumb.classList.add('has-image');
-      detailThumbHint.style.display = 'none';
-    } else {
-      if (img) img.remove();
-      detailThumb.classList.remove('has-image');
-      detailThumbHint.style.display = 'block';
-    }
-  }
 
   function renderTools() {
     const p = PROJECTS[currentId];

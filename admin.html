@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>포트폴리오 관리 | 루비베이스튜디오</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
+<link rel="icon" href="favicon.ico">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -220,6 +223,12 @@
     border-radius:8px;font-size:14px;font-family:inherit;color:var(--ink);
   }
   .form-row input[type=text]:focus{outline:none;border-color:var(--ruby);}
+  .form-row textarea{
+    width:100%;border:1px solid var(--line);padding:10px 14px;
+    border-radius:8px;font-size:14px;font-family:inherit;color:var(--ink);
+    resize:vertical;line-height:1.6;
+  }
+  .form-row textarea:focus{outline:none;border-color:var(--ruby);}
 
   .tool-select-grid{display:flex;flex-wrap:wrap;gap:8px;}
   .tool-select-chip{
@@ -577,11 +586,12 @@
               <label>작업 기간</label>
               <input type="text" class="period-input" data-pid="${pid}" value="${escapeHtml(p.period)}" placeholder="예: 2024.01 – 2024.03">
             </div>
-            <div class="form-row">
-              <label>작업 비용</label>
-              <input type="text" class="cost-input" data-pid="${pid}" value="${escapeHtml(p.cost)}" placeholder="예: 3,000,000원">
-            </div>
           </div>
+        </div>
+
+        <div class="form-row">
+          <label>작업 설명</label>
+          <textarea class="product-desc-input" data-pid="${pid}" rows="5" placeholder="상세페이지에 노출될 제품/작업 설명을 입력하세요">${escapeHtml(p.productDesc)}</textarea>
         </div>
 
         <div class="form-row">
@@ -807,8 +817,8 @@
       PROJECTS[pid].period = e.target.value;
       scheduleSave(pid);
     }
-    if (e.target.classList.contains('cost-input')) {
-      PROJECTS[pid].cost = e.target.value;
+    if (e.target.classList.contains('product-desc-input')) {
+      PROJECTS[pid].productDesc = e.target.value;
       scheduleSave(pid);
     }
     if (e.target.classList.contains('planning-range')) {

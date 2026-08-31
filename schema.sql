@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS projects (
   planning INTEGER NOT NULL DEFAULT 0,
   design INTEGER NOT NULL DEFAULT 0,
   cost TEXT NOT NULL DEFAULT '',
+  product_desc TEXT NOT NULL DEFAULT '',
   thumb TEXT,
   gallery TEXT NOT NULL DEFAULT '[]',
   created_at INTEGER NOT NULL,

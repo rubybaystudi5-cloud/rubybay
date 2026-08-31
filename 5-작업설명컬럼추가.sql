@@ -1,0 +1,1 @@
+ALTER TABLE projects ADD COLUMN product_desc TEXT NOT NULL DEFAULT '';
