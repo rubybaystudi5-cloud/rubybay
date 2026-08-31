@@ -29,11 +29,11 @@ export async function onRequestPost({ request, env }) {
 
   await env.DB.prepare(
     `INSERT INTO projects
-      (id, position, title, cat_label, description, period, tools, planning, design, cost, thumb, gallery, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      (id, position, title, cat_label, description, period, tools, planning, design, cost, product_desc, thumb, gallery, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).bind(
     id, nextPosition, cols.title, cols.cat_label, cols.description, cols.period,
-    cols.tools, cols.planning, cols.design, cols.cost, cols.thumb, cols.gallery, now, now
+    cols.tools, cols.planning, cols.design, cols.cost, cols.product_desc, cols.thumb, cols.gallery, now, now
   ).run();
 
   const row = await env.DB.prepare('SELECT * FROM projects WHERE id = ?').bind(id).first();

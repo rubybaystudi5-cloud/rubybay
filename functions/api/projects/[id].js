@@ -21,11 +21,11 @@ export async function onRequestPut({ request, env, params }) {
   await env.DB.prepare(
     `UPDATE projects SET
       title = ?, cat_label = ?, description = ?, period = ?, tools = ?,
-      planning = ?, design = ?, cost = ?, thumb = ?, gallery = ?, updated_at = ?
+      planning = ?, design = ?, cost = ?, product_desc = ?, thumb = ?, gallery = ?, updated_at = ?
      WHERE id = ?`
   ).bind(
     cols.title, cols.cat_label, cols.description, cols.period, cols.tools,
-    cols.planning, cols.design, cols.cost, cols.thumb, cols.gallery, now, id
+    cols.planning, cols.design, cols.cost, cols.product_desc, cols.thumb, cols.gallery, now, id
   ).run();
 
   const row = await env.DB.prepare('SELECT * FROM projects WHERE id = ?').bind(id).first();

@@ -16,6 +16,7 @@ export function rowToProject(row) {
     planning: row.planning,
     design: row.design,
     cost: row.cost,
+    productDesc: row.product_desc || '',
     thumb: row.thumb || null,
     gallery,
   };
@@ -47,6 +48,7 @@ export function sanitizeProjectInput(body) {
     planning: num(body.planning, 0),
     design: num(body.design, 0),
     cost: str(body.cost, ''),
+    product_desc: str(body.productDesc, ''),
     thumb: typeof body.thumb === 'string' && body.thumb ? body.thumb : null,
     gallery: JSON.stringify(strArray(body.gallery)),
   };
